@@ -99,6 +99,12 @@ Several themes are included for different visual effects.
 
 ---
 
+### Recommended Terminal Setup
+
+For the most immersive experience, using a **black terminal background** is recommended. This ensures the fire effect and color/symbol themes display as intended.
+
+---
+
 ### Examples
 #### Run with default settings:
 
