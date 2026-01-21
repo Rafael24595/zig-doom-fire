@@ -1,0 +1,109 @@
+const std = @import("std");
+
+const MiniLCG = @import("../commons/mini_lcg.zig").MiniLCG;
+
+pub const LinearMatrix = struct {
+    allocator: *std.mem.Allocator,
+
+    lcg: *MiniLCG,
+
+    status: bool = false,
+
+    intensity: usize = 0,
+
+    cols: usize = 0,
+    rows: usize = 0,
+
+    matrix: ?[]usize = null,
+
+    pub fn init(allocator: *std.mem.Allocator, lcg: *MiniLCG) LinearMatrix {
+        return LinearMatrix{
+            .allocator = allocator,
+            .lcg = lcg,
+            .status = false,
+            .intensity = 0,
+            .matrix = null,
+        };
+    }
+
+    pub fn build(self: *@This(), cols: usize, rows: usize, intensity: usize) !void {
+        self.intensity = intensity;
+
+        self.cols = cols;
+        self.rows = rows;
+
+        self.matrix = try self.allocator.alloc(usize, cols * rows);
+
+        @memset(self.matrix.?, 0);
+
+        self.on_fire();
+    }
+
+    pub fn switch_fire(self: *@This()) void {
+        if (self.status) {
+            return self.off_fire();
+        }
+        return self.on_fire();
+    }
+
+    fn on_fire(self: *@This()) void {
+        for (0..self.cols) |x| {
+            const last_r = (self.rows - 1) * self.cols + x;
+            self.matrix.?[last_r] = self.intensity;
+        }
+        self.status = true;
+    }
+
+    fn off_fire(self: *@This()) void {
+        for (0..self.cols) |x| {
+            const last_r = (self.rows - 1) * self.cols + x;
+            self.matrix.?[last_r] = 0;
+        }
+        self.status = false;
+    }
+
+    pub fn intensity_len(self: *@This()) usize {
+        return self.intensity;
+    }
+
+    pub fn vector(self: *@This()) ?[]usize {
+        return self.matrix;
+    }
+
+    pub fn cols_len(self: *@This()) usize {
+        return self.cols;
+    }
+
+    pub fn rows_len(self: *@This()) usize {
+        return self.rows;
+    }
+
+    pub fn next(self: *@This()) !void {
+        if (self.matrix == null) {
+            return;
+        }
+
+        for (0..self.rows - 1) |y| {
+            for (0..self.cols) |x| {
+                const source_i = (y + 1) * self.cols + x;
+
+                const decay = self.lcg.randInRange(0, 2);
+                const rand_dst = self.lcg.randInRange(0, 2);
+
+                var target_i = x + (rand_dst -| 1);
+                target_i = @min(self.cols - 1, target_i);
+                target_i = y * self.cols + target_i;
+
+                const new_heat = self.matrix.?[source_i] -| decay;
+                self.matrix.?[target_i] = new_heat;
+            }
+        }
+    }
+
+    pub fn free(self: *@This()) void {
+        if (self.matrix != null) {
+            self.allocator.free(self.matrix.?);
+            self.matrix = null;
+        }
+    }
+};
