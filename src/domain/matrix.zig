@@ -78,24 +78,39 @@ pub const LinearMatrix = struct {
         return self.rows;
     }
 
-    pub fn next(self: *@This()) !void {
+    pub fn next(self: *@This(), wind: isize) !void {
         if (self.matrix == null) {
             return;
         }
 
+        const last_row = self.rows - 2;
+        const wind_fix = wind + 1;
+
+        var matrix = self.matrix.?;
+
         for (0..self.rows - 1) |y| {
             for (0..self.cols) |x| {
-                const source_i = (y + 1) * self.cols + x;
+                const source = (y + 1) * self.cols + x;
 
                 const decay = self.lcg.randInRange(0, 2);
                 const rand_dst = self.lcg.randInRange(0, 2);
 
-                var target_i = x + (rand_dst -| 1);
-                target_i = @min(self.cols - 1, target_i);
-                target_i = y * self.cols + target_i;
+                const i_rand_dst: isize = @intCast(rand_dst);
+                const i_x: isize = @intCast(x);
+                const i_target = std.math.clamp(
+                    i_x + (i_rand_dst - wind_fix),
+                    0,
+                    self.cols - 1,
+                );
 
-                const new_heat = self.matrix.?[source_i] -| decay;
-                self.matrix.?[target_i] = new_heat;
+                var target: usize = @intCast(i_target);
+                target = y * self.cols + target;
+
+                matrix[target] = matrix[source] -| decay;
+                
+                if (wind != 0 and y != last_row) {
+                    matrix[source] = matrix[source] -| 1;
+                }
             }
         }
     }
