@@ -1,7 +1,9 @@
 # Zig Doom Fire
 
 A terminal-based Doom Fire simulation implemented in Zig ⚡.
-Supports configurable matrix size, fire intensity and color/symbol themes.
+Supports configurable matrix size, fire intensity, wind effect and color/symbol themes.
+
+![doom fire](.img/fire.gif)
 
 ```Text
 Warning: This program has been tested on modern terminals (Terminal Windows 1.23.13503.0). Older terminals may exhibit slow rendering or display issues when using RGB color mode. For better performance, consider using ANSI mode.
@@ -14,10 +16,11 @@ Warning: This program has been tested on modern terminals (Terminal Windows 1.23
 - Configurable life simulation with adjustable:
   - Matrix size (dynamic to terminal)
   - Fire intensity
+  - Wind effect
   - Color themes
   - Symbol themes
 - Color inheritance mode allows new cells to inherit or blend colors from parent cells
-- Debug mode displaying internal state such as intensity, themes, memory usage, and seed
+- Debug mode displaying internal state such as intensity, wind effect, themes, memory usage, and seed
 - Cross-platform signal handling for clean exit (Windows / Unix/Linux)
 
 ---
@@ -135,7 +138,7 @@ Several themes are included for different visual effects.
 When enabled (-d), the program will print additional runtime information:
 - Project name and version
 - Memory usage (persistent & scratch)
-- Execution parameters: speed, intensity, themes
+- Execution parameters: speed, intensity, wind, themes
 - Random seed and matrix dimensions
 - Time (Not counting breaks)
 
@@ -149,6 +152,8 @@ The simulation supports real-time key input. This allows you to interactively pa
 | --- | ------ |
 | `p`, `Space` | Toggle pause/resume. When paused, the simulation stops updating the matrix but the display remains visible. Pressing again resumes the simulation. |
 | `s`, | Toggle on/off the fire effect. |
+| `a` | Increases the current wind value by 1, up to a maximum of 5. |
+| `d` | Decreases the current wind value by 1, up to a minimum of -5. |
 | `+` | Increases the current sleep time by 10 ms, up to a maximum of 3000 ms (3 seconds). |
 | `-` | Decreases the current sleep time by 10 ms, down to a minimum of 0 ms. |
 | `q`, `CTRL+C` | Exit the simulation cleanly. |

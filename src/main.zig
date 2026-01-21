@@ -18,12 +18,16 @@ const MatrixPrinter = @import("io/matrix_printer.zig").LinearMatrixPrinter;
 const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
 
+const wind_default = 0;
+
 var start_timestamp = std.atomic.Value(i64).init(0);
 
 var pause = std.atomic.Value(u8).init(0);
 var pause_timestamp = std.atomic.Value(i64).init(0);
 
 var speed_ms = std.atomic.Value(u64).init(0);
+
+var wind = std.atomic.Value(isize).init(wind_default);
 
 var exit = std.atomic.Value(u8).init(0);
 var power = std.atomic.Value(u8).init(0);
@@ -160,7 +164,7 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             try mtrx_printer.print(&mtrx);
 
             if (pause.load(AtomicOrder.acquire) == 0) {
-                try mtrx.next();
+                try mtrx.next(wind.raw);
             }
 
             if (config.controls) {
@@ -227,6 +231,14 @@ fn runInputLoop() !void {
             },
             's', 'S' => {
                 _ = power.fetchXor(1, AtomicOrder.acq_rel);
+            },
+            'a', 'A' => {
+                const wind_fix = @max(-5, @min(5, wind.raw + 1));
+                _ = wind.store(wind_fix, AtomicOrder.release);
+            },
+            'd', 'D' => {
+                const wind_fix = @max(-5, @min(5, wind.raw - 1));
+                _ = wind.store(wind_fix, AtomicOrder.release);
             },
             '+' => {
                 const min = @min(1000 * 3, speed_ms.raw + 10);
@@ -297,21 +309,24 @@ pub fn print_debug(
         mtrx.intensity_len(),
     });
 
-    try printer.printf("Speed: {d}ms | Time: {s} | Theme color: {s} | Theme symbol: {s} | Power: {s} \n", .{
+    try printer.printf("Speed: {d}ms | Time: {s} | Theme color: {s} | Theme symbol: {s} | Power: {s} | Wind: {d} \n", .{
         speed_ms.raw,
         time,
         @tagName(config.theme_color),
         @tagName(config.theme_symbol),
         power_status,
+        wind.raw,
     });
 }
 
 pub fn print_controls(
     printer: *Printer,
 ) !void {
-    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Increment sleep: [{s}] | Decrement sleep: [{s}] | Exit: [{s}]", .{
+    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
         "p, space",
         "s",
+        "a",
+        "d",
         "+",
         "-",
         "q, ctrl+c",
