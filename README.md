@@ -72,12 +72,19 @@ Several themes are included for different visual effects.
 
 | Palette | Description | Example Colors | Notes |
 | ------- | ----------- | -------------- | ----- |
-| Warm | Warm, energetic | Black, Orange, Yellow, White | Classic fire tones |
-| Cool | Cold, calm | Black, Navy, Cyan, White | Icy or water-like flames |
-| Green | Mystical green | Black, GreenDark, GreenMedium, GreenBright, NeonGreen | Poisonous, magical, or alien fire |
-| Gray | Monochrome | Black, GrayDark, Gray, GrayLight, White | Smoke, ashes, subdued flames |
-| Rainbow | Full spectrum | Red, Orange, Yellow, Green, Cyan, Blue, Purple | Colorful, high variety |
-| Neon | Bright neon | Black, NeonBlue, NeonPink, NeonOrange, White | Futuristic, luminous fire |
+| Ash | Gray / ashy fire | Black, GrayDark, Gray, GrayLight, White | Smoke, ashes, subdued flames |
+| Warm | Classic warm fire | Black, Orange, Yellow, White | Classic fire tones |
+| Doom | Classic Doom-style intense fire | Black, Brown, Orange, Gold, White | More intense and deep than Warm |
+| Blood | Red infernal fire | Black, Brown, Red, Coral, White | Perfect for burning blood or demonic effects |
+| Cool | Blue / cold fire | Black, Navy, Cyan, White | Icy or water-like flames  |
+| Viridis | Green supernatural fire | Black, GreenDark, GreenMedium, GreenBright, Lavender | Stable green with lavender highlight for volume |
+| Plasma | Green intense / plasma | Black, GreenDark, GreenMedium, GreenBright | Violent green without highlights, ideal for contained energy |
+| HellBloom | Pink infernal fire | Black, Purple, NeonPink, White | Aggressive pink, dramatic, Doom 64 style |
+| Oblivion | Purple ethereal fire | Black, DeepPurple, Purple, Violet, Lavender, PaleLavender | Smooth gradient purple → white, elegant and magical |
+| Singularity | Purple plasma / energy | Black, DeepPurple, NeonPurple, HotPurple, White | More aggressive, bright tip for energy effects |
+| Neon | Neon multicolor | Black, NeonBlue, NeonPink, NeonOrange, White | Futuristic, luminous fire  |
+| VoidFireX | Dark purple / void | Black, Navy, Purple, Lavender, White | Dark monochrome, conveys emptiness or contained energy |
+| VoidFireY | Neon void | Black, NeonBlue, NeonPurple, NeonPink, White | Intense neon energy, maximum brightness for alien fire |
 
 
 ## Symbol Themes & Rendering
