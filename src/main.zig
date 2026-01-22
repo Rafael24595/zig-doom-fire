@@ -28,6 +28,7 @@ var pause_timestamp = std.atomic.Value(i64).init(0);
 var speed_ms = std.atomic.Value(u64).init(0);
 
 var wind = std.atomic.Value(isize).init(wind_default);
+var oxygen = std.atomic.Value(isize).init(0);
 
 var exit = std.atomic.Value(u8).init(0);
 var power = std.atomic.Value(u8).init(0);
@@ -164,7 +165,7 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             try mtrx_printer.print(&mtrx);
 
             if (pause.load(AtomicOrder.acquire) == 0) {
-                try mtrx.next(wind.raw);
+                try mtrx.next(wind.raw, oxygen.raw);
             }
 
             if (config.controls) {
@@ -232,12 +233,20 @@ fn runInputLoop() !void {
             's', 'S' => {
                 _ = power.fetchXor(1, AtomicOrder.acq_rel);
             },
+            'w', 'W' => {
+                const oxygen_fix = @min(5, oxygen.raw + 1);
+                _ = oxygen.store(oxygen_fix, AtomicOrder.release);
+            },
+            'x', 'X' => {
+                const oxygen_fix = @max(-5, oxygen.raw - 1);
+                _ = oxygen.store(oxygen_fix, AtomicOrder.release);
+            },
             'a', 'A' => {
-                const wind_fix = @max(-5, @min(5, wind.raw + 1));
+                const wind_fix = @min(5, wind.raw + 1);
                 _ = wind.store(wind_fix, AtomicOrder.release);
             },
             'd', 'D' => {
-                const wind_fix = @max(-5, @min(5, wind.raw - 1));
+                const wind_fix = @max(-5, wind.raw - 1);
                 _ = wind.store(wind_fix, AtomicOrder.release);
             },
             '+' => {
@@ -309,22 +318,25 @@ pub fn print_debug(
         mtrx.intensity_len(),
     });
 
-    try printer.printf("Speed: {d}ms | Time: {s} | Theme color: {s} | Theme symbol: {s} | Power: {s} | Wind: {d} \n", .{
+    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{
         speed_ms.raw,
         time,
         @tagName(config.theme_color),
         @tagName(config.theme_symbol),
         power_status,
         wind.raw,
+        oxygen.raw
     });
 }
 
 pub fn print_controls(
     printer: *Printer,
 ) !void {
-    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
+    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc oxygen: {s} | Dec oxygen: {s} | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
         "p, space",
         "s",
+        "w",
+        "x",
         "a",
         "d",
         "+",
