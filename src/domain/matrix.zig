@@ -48,7 +48,7 @@ pub const LinearMatrix = struct {
 
     fn on_fire(self: *@This()) void {
         for (0..self.cols) |x| {
-            const last_r = (self.rows - 1) * self.cols + x;
+            const last_r = self.idx(self.rows - 1, x);
             self.matrix.?[last_r] = self.intensity;
         }
         self.status = true;
@@ -56,7 +56,7 @@ pub const LinearMatrix = struct {
 
     fn off_fire(self: *@This()) void {
         for (0..self.cols) |x| {
-            const last_r = (self.rows - 1) * self.cols + x;
+            const last_r = self.idx(self.rows - 1, x);
             self.matrix.?[last_r] = 0;
         }
         self.status = false;
@@ -89,8 +89,11 @@ pub const LinearMatrix = struct {
         var matrix = self.matrix.?;
 
         for (0..self.rows - 1) |y| {
+            const source_start = (y + 1) * self.cols;
+            const target_start = y * self.cols;
+            
             for (0..self.cols) |x| {
-                const source = (y + 1) * self.cols + x;
+                const source = source_start + x;
 
                 var decay = self.lcg.randInRange(0, 2);
                 if (oxygen != 0) {
@@ -101,6 +104,7 @@ pub const LinearMatrix = struct {
 
                 const i_rand_dst: isize = @intCast(rand_dst);
                 const i_x: isize = @intCast(x);
+                
                 const i_target = std.math.clamp(
                     i_x + (i_rand_dst - wind_fix),
                     0,
@@ -108,7 +112,7 @@ pub const LinearMatrix = struct {
                 );
 
                 var target: usize = @intCast(i_target);
-                target = y * self.cols + target;
+                target = target_start + target;
 
                 matrix[target] = matrix[source] -| decay;
 
@@ -126,12 +130,16 @@ pub const LinearMatrix = struct {
         if (oxygen > 0 and rand_oxigen < accept) {
             return decay -| 1;
         }
-        
+
         if (oxygen < 0 and rand_oxigen < -accept) {
             return decay + 1;
         }
 
         return decay;
+    }
+
+    inline fn idx(self: *@This(), y: usize, x: usize) usize {
+        return y * self.cols + x;
     }
 
     pub fn free(self: *@This()) void {
