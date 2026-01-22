@@ -15,7 +15,7 @@ pub const ThemeMeta = struct {
 };
 
 //TODO -> [Improve]: death_char field MUST be a space char (' ') for performance reasons.
-const ModeMap = [_]ThemeMeta{
+const ThemeMap = [_]ThemeMeta{
     .{ .active_char = "#", .inactive_char = " ", .total_bytes = 1 },
     .{ .active_char = "*", .inactive_char = " ", .total_bytes = 1 },
     .{ .active_char = "^", .inactive_char = " ", .total_bytes = 1 },
@@ -26,5 +26,5 @@ const ModeMap = [_]ThemeMeta{
 };
 
 pub fn metaOf(m: Theme) ThemeMeta {
-    return ModeMap[@intFromEnum(m)];
+    return ThemeMap[@intFromEnum(m)];
 }
