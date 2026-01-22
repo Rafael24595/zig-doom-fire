@@ -1,7 +1,7 @@
 # Zig Doom Fire
 
 A terminal-based Doom Fire simulation implemented in Zig ⚡.
-Supports configurable matrix size, fire intensity, wind effect and color/symbol themes.
+Supports configurable matrix size, fire intensity, wind effect, oxygen level and color/symbol themes.
 
 ![doom fire](.img/fire.gif)
 
@@ -17,10 +17,11 @@ Warning: This program has been tested on modern terminals (Terminal Windows 1.23
   - Matrix size (dynamic to terminal)
   - Fire intensity
   - Wind effect
+  - Oxygen level
   - Color themes
   - Symbol themes
 - Color inheritance mode allows new cells to inherit or blend colors from parent cells
-- Debug mode displaying internal state such as intensity, wind effect, themes, memory usage, and seed
+- Debug mode displaying internal state such as intensity, wind, oxygen, themes, memory usage, and seed
 - Cross-platform signal handling for clean exit (Windows / Unix/Linux)
 
 ---
@@ -71,12 +72,19 @@ Several themes are included for different visual effects.
 
 | Palette | Description | Example Colors | Notes |
 | ------- | ----------- | -------------- | ----- |
-| Warm | Warm, energetic | Black, Orange, Yellow, White | Classic fire tones |
-| Cool | Cold, calm | Black, Navy, Cyan, White | Icy or water-like flames |
-| Green | Mystical green | Black, GreenDark, GreenMedium, GreenBright, NeonGreen | Poisonous, magical, or alien fire |
-| Gray | Monochrome | Black, GrayDark, Gray, GrayLight, White | Smoke, ashes, subdued flames |
-| Rainbow | Full spectrum | Red, Orange, Yellow, Green, Cyan, Blue, Purple | Colorful, high variety |
-| Neon | Bright neon | Black, NeonBlue, NeonPink, NeonOrange, White | Futuristic, luminous fire |
+| Ash | Gray / ashy fire | Black, GrayDark, Gray, GrayLight, White | Smoke, ashes, subdued flames |
+| Warm | Classic warm fire | Black, Orange, Yellow, White | Classic fire tones |
+| Doom | Classic Doom-style intense fire | Black, Brown, Orange, Gold, White | More intense and deep than Warm |
+| Blood | Red infernal fire | Black, Brown, Red, Coral, White | Perfect for burning blood or demonic effects |
+| Cool | Blue / cold fire | Black, Navy, Cyan, White | Icy or water-like flames  |
+| Viridis | Green supernatural fire | Black, GreenDark, GreenMedium, GreenBright, Lavender | Stable green with lavender highlight for volume |
+| Plasma | Green intense / plasma | Black, GreenDark, GreenMedium, GreenBright | Violent green without highlights, ideal for contained energy |
+| HellBloom | Pink infernal fire | Black, Purple, NeonPink, White | Aggressive pink, dramatic, Doom 64 style |
+| Oblivion | Purple ethereal fire | Black, DeepPurple, Purple, Violet, Lavender, PaleLavender | Smooth gradient purple → white, elegant and magical |
+| Singularity | Purple plasma / energy | Black, DeepPurple, NeonPurple, HotPurple, White | More aggressive, bright tip for energy effects |
+| Neon | Neon multicolor | Black, NeonBlue, NeonPink, NeonOrange, White | Futuristic, luminous fire  |
+| VoidFireX | Dark purple / void | Black, Navy, Purple, Lavender, White | Dark monochrome, conveys emptiness or contained energy |
+| VoidFireY | Neon void | Black, NeonBlue, NeonPurple, NeonPink, White | Intense neon energy, maximum brightness for alien fire |
 
 
 ## Symbol Themes & Rendering
@@ -144,7 +152,7 @@ For the most immersive experience, using a **black terminal background** is reco
 When enabled (-d), the program will print additional runtime information:
 - Project name and version
 - Memory usage (persistent & scratch)
-- Execution parameters: speed, intensity, wind, themes
+- Execution parameters: speed, intensity, wind, oxygen, themes
 - Random seed and matrix dimensions
 - Time (Not counting breaks)
 
@@ -158,6 +166,8 @@ The simulation supports real-time key input. This allows you to interactively pa
 | --- | ------ |
 | `p`, `Space` | Toggle pause/resume. When paused, the simulation stops updating the matrix but the display remains visible. Pressing again resumes the simulation. |
 | `s`, | Toggle on/off the fire effect. |
+| `w` | Increases the current oxygen level by 1, up to a maximum of 5. |
+| `x` | Decreases the current oxygen level by 1, up to a minimum of -5. |
 | `a` | Increases the current wind value by 1, up to a maximum of 5. |
 | `d` | Decreases the current wind value by 1, up to a minimum of -5. |
 | `+` | Increases the current sleep time by 10 ms, up to a maximum of 3000 ms (3 seconds). |

@@ -78,7 +78,7 @@ pub const LinearMatrix = struct {
         return self.rows;
     }
 
-    pub fn next(self: *@This(), wind: isize) !void {
+    pub fn next(self: *@This(), wind: isize, oxygen: isize) !void {
         if (self.matrix == null) {
             return;
         }
@@ -92,7 +92,11 @@ pub const LinearMatrix = struct {
             for (0..self.cols) |x| {
                 const source = (y + 1) * self.cols + x;
 
-                const decay = self.lcg.randInRange(0, 2);
+                var decay = self.lcg.randInRange(0, 2);
+                if (oxygen != 0) {
+                    decay = self.apply_oxygen(decay, oxygen);
+                }
+
                 const rand_dst = self.lcg.randInRange(0, 2);
 
                 const i_rand_dst: isize = @intCast(rand_dst);
@@ -107,12 +111,27 @@ pub const LinearMatrix = struct {
                 target = y * self.cols + target;
 
                 matrix[target] = matrix[source] -| decay;
-                
+
                 if (wind != 0 and y != last_row) {
                     matrix[source] = matrix[source] -| 1;
                 }
             }
         }
+    }
+
+    inline fn apply_oxygen(self: *@This(), decay: usize, oxygen: isize) usize {
+        const rand_oxigen = self.lcg.randInRange(0, 100);
+        const accept = oxygen * 20;
+
+        if (oxygen > 0 and rand_oxigen < accept) {
+            return decay -| 1;
+        }
+        
+        if (oxygen < 0 and rand_oxigen < -accept) {
+            return decay + 1;
+        }
+
+        return decay;
     }
 
     pub fn free(self: *@This()) void {
