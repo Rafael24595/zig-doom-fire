@@ -63,7 +63,7 @@ The simulation adapts automatically to the size of your terminal window.
 | `-ms` | Frame delay in milliseconds | 50 | Any unsigned integer |
 | `-i` | Intensity | 0.60 × matrix height | Any unsigned integer |
 | `-tc` | Color theme | Warm | Warm, Cool, GREEN_THEME, Gray, Neon |
-| `-tc` | Symbol theme | Classic | Classic, Star, Arrow, Plus, Triangle, Spark, Block |
+| `-ts` | Symbol theme | Classic | Classic, Star, Arrow, Plus, Triangle, Spark, Block |
 | `-cm` | Color mode | RGB | RGB, ANSI |
 
 ## Color Themes
