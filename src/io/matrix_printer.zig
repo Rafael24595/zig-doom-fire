@@ -61,6 +61,11 @@ pub const LinearMatrixPrinter = struct {
         };
     }
 
+    pub fn free(self: *@This()) void {
+        self.buffer.deinit(self.allocator.*);
+        self.allocator.free(self.format);
+    }
+
     pub fn print(self: *@This(), mtrx: *LinearMatrix) !void {
         if (mtrx.vector() == null or mtrx.vector().?.len == 0) {
             return;
@@ -95,10 +100,5 @@ pub const LinearMatrixPrinter = struct {
         try self.buffer.appendSlice(self.allocator.*, self.sufix);
 
         try self.printer.print(self.buffer.items);
-    }
-
-    pub fn reset(self: *@This()) void {
-        self.buffer.deinit(self.allocator.*);
-        self.allocator.free(self.format);
     }
 };

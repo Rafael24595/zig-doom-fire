@@ -142,7 +142,7 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             &mtrx,
         );
 
-        defer mtrx_printer.reset();
+        defer mtrx_printer.free();
 
         try printer.print(console.CLEAN_CONSOLE);
 
