@@ -119,17 +119,6 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             config.theme_color,
         );
 
-        var mtrx_printer = try MatrixPrinter.init(
-            &persistent,
-            printer,
-            color_manager,
-            config.formatter_matrix,
-            config.formatter_cell,
-            config.theme_symbol,
-        );
-
-        defer mtrx_printer.reset();
-
         var mtrx = matrix.LinearMatrix.init(
             &persistent,
             &lcg,
@@ -142,6 +131,18 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
         );
 
         defer mtrx.free();
+
+        var mtrx_printer = try MatrixPrinter.init(
+            &persistent,
+            printer,
+            color_manager,
+            config.formatter_matrix,
+            config.formatter_cell,
+            config.theme_symbol,
+            &mtrx,
+        );
+
+        defer mtrx_printer.reset();
 
         try printer.print(console.CLEAN_CONSOLE);
 
