@@ -2,7 +2,7 @@ const std = @import("std");
 
 const Printer = @import("printer.zig").Printer;
 
-const Vector = @import("../domain/matrix.zig").LinearMatrix;
+const LinearMatrix = @import("../domain/matrix.zig").LinearMatrix;
 
 const symbol = @import("../domain/symbol.zig");
 const color = @import("../domain/color.zig");
@@ -40,14 +40,14 @@ pub const LinearMatrixPrinter = struct {
         };
     }
 
-    pub fn print(self: *@This(), vctr: *Vector) !void {
-        if (vctr.vector() == null or vctr.vector().?.len == 0) {
+    pub fn print(self: *@This(), mtrx: *LinearMatrix) !void {
+        if (mtrx.vector() == null or mtrx.vector().?.len == 0) {
             return;
         }
 
-        const matrix = vctr.vector().?;
-        const rows = vctr.rows_len();
-        const columns = vctr.cols_len();
+        const matrix = mtrx.vector().?;
+        const rows = mtrx.rows_len();
+        const columns = mtrx.cols_len();
 
         const char_fmt_len = self.formatter.fmt_bytes() + self.mode_meta.total_bytes;
         const mtrx_fmt_len = rows * columns * char_fmt_len;
