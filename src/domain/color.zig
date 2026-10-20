@@ -300,6 +300,6 @@ pub const ColorManager = struct {
 
     pub fn free(self: *@This()) void {
         self.allocator.free(self.table);
-        self.table = null;
+        self.table = undefined;
     }
 };
