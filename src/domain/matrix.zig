@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const MiniLCG = @import("../commons/mini_lcg.zig").MiniLCG;
+const MiniLCG = @import("terminal_kit").mini_lcg.MiniLCG;
 
 pub const LinearMatrix = struct {
     allocator: *std.mem.Allocator,
@@ -95,12 +95,12 @@ pub const LinearMatrix = struct {
             for (0..self.cols) |x| {
                 const source = source_start + x;
 
-                var decay = self.lcg.randInRange(0, 2);
+                var decay = self.lcg.rand_in_range(0, 2);
                 if (oxygen != 0) {
                     decay = self.apply_oxygen(decay, oxygen);
                 }
 
-                const rand_dst = self.lcg.randInRange(0, 2);
+                const rand_dst = self.lcg.rand_in_range(0, 2);
 
                 const i_rand_dst: isize = @intCast(rand_dst);
                 const i_x: isize = @intCast(x);
@@ -124,7 +124,7 @@ pub const LinearMatrix = struct {
     }
 
     inline fn apply_oxygen(self: *@This(), decay: usize, oxygen: isize) usize {
-        const rand_oxigen = self.lcg.randInRange(0, 100);
+        const rand_oxigen = self.lcg.rand_in_range(0, 100);
         const accept = oxygen * 20;
 
         if (oxygen > 0 and rand_oxigen < accept) {

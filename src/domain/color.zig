@@ -1,92 +1,6 @@
 const std = @import("std");
 
-pub const Color = enum {
-    White,
-    Black,
-    Red,
-    Green,
-    GreenDark,
-    GreenMedium,
-    GreenBright,
-    GreenOlive,
-    GreenMoss,
-    Blue,
-    Yellow,
-    Cyan,
-    Magenta,
-    Orange,
-    Purple,
-    DeepPurple,
-    Violet,
-    HotPurple,
-    PaleLavender,
-    Gray,
-    GrayDark,
-    GrayLight,
-    Pink,
-    Brown,
-    Aqua,
-    Navy,
-    Teal,
-    NeonPink,
-    NeonGreen,
-    NeonBlue,
-    NeonYellow,
-    NeonOrange,
-    NeonPurple,
-    NeonCyan,
-    NeonRed,
-    Lavender,
-    Lime,
-    Coral,
-    Gold,
-};
-
-const ColorMap = [_][3]u8{
-    .{ 255, 255, 255 }, // White
-    .{ 0, 0, 0 }, // Black
-    .{ 255, 0, 0 }, // Red
-    .{ 0, 255, 0 }, // Green
-    .{ 0, 128, 0 }, // GreenDark
-    .{ 0, 200, 0 }, // GreenMedium
-    .{ 128, 255, 128 }, // GreenBright
-    .{ 85, 107, 47 }, // GreenOlive (oscuro, terroso)
-    .{ 120, 160, 60 }, // GreenMoss (apagado, natural)
-    .{ 0, 0, 255 }, // Blue
-    .{ 255, 255, 0 }, // Yellow
-    .{ 0, 255, 255 }, // Cyan
-    .{ 255, 0, 255 }, // Magenta
-    .{ 255, 128, 0 }, // Orange
-    .{ 128, 0, 128 }, // Purple
-    .{ 48, 0, 72 }, // DeepPurple (muy oscuro, casi negro)
-    .{ 138, 43, 226 }, // Violet (violet blue)
-    .{ 255, 0, 255 }, // HotPurple (similar a magenta intenso)
-    .{ 245, 240, 255 }, // PaleLavender (casi blanco con tinte violeta)
-    .{ 128, 128, 128 }, // Gray
-    .{ 64, 64, 64 }, // GrayDark
-    .{ 192, 192, 192 }, // GrayLight
-    .{ 255, 192, 203 }, // Pink
-    .{ 165, 42, 42 }, // Brown
-    .{ 127, 255, 212 }, // Aqua
-    .{ 0, 0, 128 }, // Navy
-    .{ 0, 128, 128 }, // Teal
-    .{ 255, 0, 144 }, // NeonPink
-    .{ 57, 255, 20 }, // NeonGreen
-    .{ 0, 191, 255 }, // NeonBlue
-    .{ 207, 255, 4 }, // NeonYellow
-    .{ 255, 95, 31 }, // NeonOrange
-    .{ 191, 0, 255 }, // NeonPurple
-    .{ 0, 255, 255 }, // NeonCyan
-    .{ 255, 16, 83 }, // NeonRed
-    .{ 230, 230, 250 }, // Lavender
-    .{ 0, 255, 0 }, // Lime
-    .{ 255, 127, 80 }, // Coral
-    .{ 255, 215, 0 }, // Gold
-};
-
-pub fn rgbOf(c: Color) [3]u8 {
-    return ColorMap[@intFromEnum(c)];
-}
+const kit_color = @import("terminal_kit").color;
 
 pub const Theme = enum {
     Ash,
@@ -133,141 +47,141 @@ const ThemeMap = [_]ThemeMeta{
 
 pub const GRAY_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.GrayDark), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.Gray), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.GrayLight), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray_dark), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray_light), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.05 },
     },
 };
 
 pub const ORANGE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.05 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.45 },
-        .{ .rgb = rgbOf(Color.Yellow), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.45 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.yellow), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.1 },
     },
 };
 
 pub const ORANGE_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.Brown), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Gold), .weight = 0.23 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.brown), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gold), .weight = 0.23 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const RED_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Brown), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.Red), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Coral), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.brown), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.red), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.coral), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const BLUE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.05 },
-        .{ .rgb = rgbOf(Color.Navy), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.Cyan), .weight = 0.45 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.navy), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.cyan), .weight = 0.45 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const GREEN_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.GreenDark), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenMedium), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenBright), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.10 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_dark), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_medium), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_bright), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.10 },
     },
 };
 
 pub const GREEN_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.GreenDark), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenMedium), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenBright), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_dark), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_medium), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_bright), .weight = 0.2 },
     },
 };
 
 pub const PINK_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.10 },
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.22 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.16 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.10 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.22 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.16 },
     },
 };
 
 pub const PURPLE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.08 },
-        .{ .rgb = rgbOf(Color.DeepPurple), .weight = 0.22 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Violet), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.PaleLavender), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.08 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.deep_purple), .weight = 0.22 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.violet), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.pale_lavender), .weight = 0.05 },
     },
 };
 
 pub const PURPLE_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.DeepPurple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.NeonPurple), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.HotPurple), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.deep_purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_purple), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.hot_purple), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const VOID_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Navy), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.navy), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.05 },
     },
 };
 
 pub const VOID_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.NeonBlue), .weight = 0.28 },
-        .{ .rgb = rgbOf(Color.NeonPurple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_blue), .weight = 0.28 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const NEON_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.NeonBlue), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.NeonOrange), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_blue), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_orange), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.1 },
     },
 };
 
 pub const RAINBOW_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Red), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Yellow), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Green), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Cyan), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Blue), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.red), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.yellow), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.cyan), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.blue), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.1 },
     },
 };
 

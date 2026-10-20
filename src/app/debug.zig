@@ -2,25 +2,25 @@ const std = @import("std");
 
 const build = @import("build.zig.zon");
 
+const terminal_kit = @import("terminal_kit");
+
+const kit_time = terminal_kit.time;
+
+const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
+const RuntimeState = terminal_kit.runtime_state.RuntimeState;
+const Printer = terminal_kit.printer.Printer;
+
 const configuration = @import("../configuration/configuration.zig");
-
-const utils = @import("../commons/utils.zig");
-
-const AllocatorTracer = @import("../commons/allocator.zig").AllocatorTracer;
-const Printer = @import("../io/printer.zig").Printer;
 
 const matrix = @import("../domain/matrix.zig");
 
 pub fn print_debug(
+    state: *RuntimeState,
     persistentAllocator: *AllocatorTracer,
     scratchAllocator: *AllocatorTracer,
     config: *const configuration.Configuration,
     printer: *Printer,
     mtrx: *matrix.LinearMatrix,
-    pause: *std.atomic.Value(u8),
-    pause_timestamp: *std.atomic.Value(i64),
-    start_timestamp: *std.atomic.Value(i64),
-    speed_ms: *std.atomic.Value(u64),
     wind: *std.atomic.Value(isize),
     oxygen: *std.atomic.Value(isize),
 ) !void {
@@ -31,17 +31,16 @@ pub fn print_debug(
     const fixedArea = rows * cols;
 
     var end_ms = std.time.milliTimestamp();
-    if (pause.load(.acquire) == 1) {
-        end_ms = pause_timestamp.raw;
+    if (state.pause.load(.acquire)) {
+        end_ms = state.pause_timestamp.load(.acquire);
     }
 
-    const time = try utils.millisecondsToTime(scratch, end_ms - start_timestamp.raw, null);
+    const start_timestamp = state.start_timestamp.load(.acquire);
+
+    const time = try kit_time.milliseconds_to_time(scratch, end_ms - start_timestamp, null);
     defer scratch.free(time);
 
-    var paused = false;
-    if (pause.load(.acquire) == 1) {
-        paused = true;
-    }
+    const paused = state.pause.load(.acquire);
 
     var power_status: []const u8 = "off";
     if (mtrx.status) {
@@ -67,7 +66,15 @@ pub fn print_debug(
         mtrx.intensity_len(),
     });
 
-    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{ speed_ms.raw, time, @tagName(config.theme_color), @tagName(config.theme_symbol), power_status, wind.raw, oxygen.raw });
+    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{
+        state.speed_ms.load(.acquire),
+        time,
+        @tagName(config.theme_color),
+        @tagName(config.theme_symbol),
+        power_status,
+        wind.load(.acquire),
+        oxygen.load(.acquire),
+    });
 }
 
 pub fn print_controls(printer: *Printer) !void {
