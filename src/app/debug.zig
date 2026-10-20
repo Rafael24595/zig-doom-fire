@@ -12,22 +12,24 @@ const Printer = terminal_kit.printer.Printer;
 
 const configuration = @import("../configuration/configuration.zig");
 
-const matrix = @import("../domain/matrix.zig");
+const FireState = @import("./fire_state.zig").FireState;
+const RenderContext = @import("./render_context.zig").RenderContext;
 
 pub fn print_debug(
     state: *RuntimeState,
+    fire_state: *FireState,
     persistentAllocator: *AllocatorTracer,
     scratchAllocator: *AllocatorTracer,
     config: *const configuration.Configuration,
     printer: *Printer,
-    mtrx: *matrix.LinearMatrix,
-    wind: *std.atomic.Value(isize),
-    oxygen: *std.atomic.Value(isize),
+    context: *RenderContext,
 ) !void {
     var scratch = scratchAllocator.allocator();
 
-    const cols = mtrx.cols_len();
-    const rows = mtrx.rows_len();
+    var matrix = context.matrix;
+
+    const cols = matrix.cols_len();
+    const rows = matrix.rows_len();
     const fixedArea = rows * cols;
 
     var end_ms = std.time.milliTimestamp();
@@ -43,7 +45,7 @@ pub fn print_debug(
     const paused = state.pause.load(.acquire);
 
     var power_status: []const u8 = "off";
-    if (mtrx.status) {
+    if (matrix.status) {
         power_status = "on";
     }
 
@@ -52,10 +54,11 @@ pub fn print_debug(
         build.version,
     });
 
-    try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} \n", .{
+    try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} | FPS: {d}  \n", .{
         persistentAllocator.bytes(),
         scratchAllocator.bytes(),
         paused,
+        context.counter.get_frame_rate(std.time.ms_per_s),
     });
 
     try printer.printf("Seed: {d} | Matrix: {d} | Columns: {d} | Rows: {d} | Intensity: {d} \n", .{
@@ -63,7 +66,7 @@ pub fn print_debug(
         fixedArea,
         cols,
         rows,
-        mtrx.intensity_len(),
+        matrix.intensity_len(),
     });
 
     try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{
@@ -72,8 +75,8 @@ pub fn print_debug(
         @tagName(config.theme_color),
         @tagName(config.theme_symbol),
         power_status,
-        wind.load(.acquire),
-        oxygen.load(.acquire),
+        fire_state.wind.load(.acquire),
+        fire_state.oxygen.load(.acquire),
     });
 }
 
