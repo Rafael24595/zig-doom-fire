@@ -7,6 +7,8 @@ const build = @import("build.zig.zon");
 
 const configuration = @import("configuration/configuration.zig");
 
+const debug = @import("app/debug.zig");
+
 const utils = @import("commons/utils.zig");
 const AllocatorTracer = @import("commons/allocator.zig").AllocatorTracer;
 const MiniLCG = @import("commons/mini_lcg.zig").MiniLCG;
@@ -155,12 +157,18 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             try printer.print(console.RESET_CURSOR);
 
             if (config.debug) {
-                try print_debug(
+                try debug.print_debug(
                     persistentAllocator,
                     scratchAllocator,
                     config,
                     printer,
                     &mtrx,
+                    &pause,
+                    &pause_timestamp,
+                    &start_timestamp,
+                    &speed_ms,
+                    &wind,
+                    &oxygen,
                 );
             }
 
@@ -171,7 +179,7 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
             }
 
             if (config.controls) {
-                try print_controls(printer);
+                try debug.print_controls(printer);
             }
 
             mutex.lock();
@@ -272,75 +280,6 @@ fn runInputLoop() !void {
             else => {},
         }
     }
-}
-
-pub fn print_debug(
-    persistentAllocator: *AllocatorTracer,
-    scratchAllocator: *AllocatorTracer,
-    config: *const configuration.Configuration,
-    printer: *Printer,
-    mtrx: *matrix.LinearMatrix,
-) !void {
-    var scratch = scratchAllocator.allocator();
-
-    const cols = mtrx.cols_len();
-    const rows = mtrx.rows_len();
-    const fixedArea = rows * cols;
-
-    var end_ms = std.time.milliTimestamp();
-    if (pause.load(AtomicOrder.acquire) == 1) {
-        end_ms = pause_timestamp.raw;
-    }
-
-    const time = try utils.millisecondsToTime(scratch, end_ms - start_timestamp.raw, null);
-    defer scratch.free(time);
-
-    var paused = false;
-    if (pause.load(AtomicOrder.acquire) == 1) {
-        paused = true;
-    }
-
-    var power_status: []const u8 = "off";
-    if (mtrx.status) {
-        power_status = "on";
-    }
-
-    try printer.printf("{}: {s}\n", .{
-        build.name,
-        build.version,
-    });
-
-    try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} \n", .{
-        persistentAllocator.bytes(),
-        scratchAllocator.bytes(),
-        paused,
-    });
-
-    try printer.printf("Seed: {d} | Matrix: {d} | Columns: {d} | Rows: {d} | Intensity: {d} \n", .{
-        config.seed,
-        fixedArea,
-        cols,
-        rows,
-        mtrx.intensity_len(),
-    });
-
-    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{ speed_ms.raw, time, @tagName(config.theme_color), @tagName(config.theme_symbol), power_status, wind.raw, oxygen.raw });
-}
-
-pub fn print_controls(
-    printer: *Printer,
-) !void {
-    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc oxygen: {s} | Dec oxygen: {s} | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
-        "p, space",
-        "s",
-        "w",
-        "x",
-        "a",
-        "d",
-        "+",
-        "-",
-        "q, ctrl+c",
-    });
 }
 
 pub fn defineSignalHandlers() !void {
