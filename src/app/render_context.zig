@@ -26,9 +26,6 @@ pub const RenderContext = struct {
     /// Handles the formatting and output of the matrix.
     matrix_printer: LinearMatrixPrinter,
 
-    wind: std.atomic.Value(isize),
-    oxygen: std.atomic.Value(isize),
-
     /// Tracks the number of frames rendered and calculates the frame rate.
     counter: Counter,
 
@@ -81,9 +78,6 @@ pub const RenderContext = struct {
         );
 
         errdefer self.matrix_printer.free();
-
-        self.wind = std.atomic.Value(isize).init(wind_default);
-        self.oxygen = std.atomic.Value(isize).init(0);
 
         self.counter = Counter.init();
     }
