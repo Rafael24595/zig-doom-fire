@@ -188,8 +188,7 @@ inline fn run_render_cycle(
 
         printer.reset();
 
-        const newWinsize = try console.winsize();
-        if (winsize.cols != newWinsize.cols or winsize.rows != newWinsize.rows) {
+        if (!winsize.eql(try console.winsize())) {
             state.request_reload();
         }
 
@@ -231,14 +230,10 @@ fn runInputLoop(
                 fire_state.mod_wind(-1);
             },
             '+' => {
-                const speed = state.speed_ms.load(.acquire);
-                const min = @min(3000, speed + 10);
-                state.set_speed(min);
+                state.mod_speed(10);
             },
             '-' => {
-                const speed = state.speed_ms.load(.acquire);
-                const max = speed -| 10;
-                state.set_speed(max);
+                state.mod_speed(-10);
             },
             'q', 'Q', console.CTRL_C => {
                 state.request_exit();
