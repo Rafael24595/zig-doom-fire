@@ -1,11 +1,11 @@
 pub const Theme = enum {
-    Classic,
-    Star,
-    Arrow,
-    Plus,
-    Triangle,
-    Spark,
-    Block,
+    classic,
+    star,
+    arrow,
+    plus,
+    triangle,
+    spark,
+    block,
 };
 
 pub const ThemeMeta = struct {

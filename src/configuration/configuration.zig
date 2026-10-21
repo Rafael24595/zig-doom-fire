@@ -102,8 +102,8 @@ pub const Configuration = struct {
     intensity_per: f32 = 0.60,
     intensity: usize = 0,
 
-    theme_symbol: symbol.Theme = symbol.Theme.Classic,
-    theme_color: color.Theme = color.Theme.Warm,
+    theme_symbol: symbol.Theme = symbol.Theme.classic,
+    theme_color: color.Theme = color.Theme.warm,
 
     color_mode: formatter.FormatterCode = formatter.FormatterCode.RGB,
 

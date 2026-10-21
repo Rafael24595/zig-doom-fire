@@ -3,20 +3,20 @@ const std = @import("std");
 const kit_color = @import("terminal_kit").color;
 
 pub const Theme = enum {
-    Ash,
-    Warm,
-    Doom,
-    Blood,
-    Cool,
-    Viridis,
-    Plasma,
-    HellBloom,
-    Oblivion,
-    Singularity,
-    Neon,
-    VoidFireX,
-    VoidFireY,
-    //Rainbow,
+    ash,
+    warm,
+    doom,
+    blood,
+    cool,
+    viridis,
+    plasma,
+    hell_bloom,
+    oblivion,
+    singularity,
+    neon,
+    void_fire_x,
+    void_fire_y,
+    //rainbow,
 };
 
 pub const ThemeMeta = struct {
