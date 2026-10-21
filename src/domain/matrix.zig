@@ -26,6 +26,13 @@ pub const LinearMatrix = struct {
         };
     }
 
+    pub fn free(self: *@This()) void {
+        if (self.matrix != null) {
+            self.allocator.free(self.matrix.?);
+            self.matrix = null;
+        }
+    }
+
     pub fn build(self: *@This(), cols: usize, rows: usize, intensity: usize) !void {
         self.intensity = intensity;
 
@@ -91,7 +98,7 @@ pub const LinearMatrix = struct {
         for (0..self.rows - 1) |y| {
             const source_start = (y + 1) * self.cols;
             const target_start = y * self.cols;
-            
+
             for (0..self.cols) |x| {
                 const source = source_start + x;
 
@@ -104,7 +111,7 @@ pub const LinearMatrix = struct {
 
                 const i_rand_dst: isize = @intCast(rand_dst);
                 const i_x: isize = @intCast(x);
-                
+
                 const i_target = std.math.clamp(
                     i_x + (i_rand_dst - wind_fix),
                     0,
@@ -140,12 +147,5 @@ pub const LinearMatrix = struct {
 
     inline fn idx(self: *@This(), y: usize, x: usize) usize {
         return y * self.cols + x;
-    }
-
-    pub fn free(self: *@This()) void {
-        if (self.matrix != null) {
-            self.allocator.free(self.matrix.?);
-            self.matrix = null;
-        }
     }
 };

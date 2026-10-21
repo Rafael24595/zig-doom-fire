@@ -205,6 +205,11 @@ pub const ColorManager = struct {
         };
     }
 
+    pub fn free(self: *@This()) void {
+        self.allocator.free(self.table);
+        self.table = undefined;
+    }
+
     pub fn find(self: @This(), i: usize) ?[3]u8 {
         if (i >= self.table.len or i == 0) {
             return null;
@@ -296,10 +301,5 @@ pub const ColorManager = struct {
 
         const result = std.math.clamp(fa + t * (fb - fa), 0, 255);
         return @intFromFloat(result);
-    }
-
-    pub fn free(self: *@This()) void {
-        self.allocator.free(self.table);
-        self.table = undefined;
     }
 };
