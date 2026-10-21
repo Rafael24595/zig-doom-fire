@@ -113,64 +113,87 @@ pub fn run(
     while (!runtime.should_exit(state)) {
         _ = state.consume_reload();
 
-        const winsize = try console.winsize();
-
-        var context: RenderContext = undefined;
-
-        try context.init(
+        try run_render_cycle(
             &persistent,
-            winsize,
+            persistentAllocator,
+            scratchAllocator,
+            state,
+            fire_state,
             config,
             printer,
             &lcg,
         );
+    }
+}
 
-        defer context.deinit();
+inline fn run_render_cycle(
+    allocator: *std.mem.Allocator,
+    persistent: *AllocatorTracer,
+    scratch: *AllocatorTracer,
+    state: *runtime.RuntimeState,
+    fire_state: *FireState,
+    config: *const configuration.Configuration,
+    printer: *Printer,
+    lcg: *MiniLCG,
+) !void {
+    const winsize = try console.winsize();
 
-        try printer.print(console.CLEAN_CONSOLE);
+    var context: RenderContext = undefined;
 
-        while (!runtime.should_exit(state) and !runtime.should_reload(state)) {
-            if (fire_state.consume_power()) {
-                context.matrix.switch_fire();
-            }
+    try context.init(
+        allocator,
+        winsize,
+        config,
+        printer,
+        lcg,
+    );
+    defer context.deinit();
 
-            try printer.print(console.RESET_CURSOR);
+    try printer.print(console.CLEAN_CONSOLE);
 
-            if (config.debug) {
-                try debug.print_debug(
-                    state,
-                    fire_state,
-                    persistentAllocator,
-                    scratchAllocator,
-                    config,
-                    printer,
-                    &context,
-                );
-            }
-
-            try context.matrix_printer.print(&context.matrix);
-
-            if (!state.pause.load(.acquire)) {
-                try context.matrix.next(
-                    fire_state.wind.load(.acquire),
-                    fire_state.oxygen.load(.acquire),
-                );
-            }
-
-            if (config.controls) {
-                try debug.print_controls(printer);
-            }
-
-            const speed = state.speed_ms.load(.acquire);
-            try state.wait_for_frame(speed * std.time.ns_per_ms);
-
-            printer.reset();
-
-            const newWinsize = try console.winsize();
-            if (winsize.cols != newWinsize.cols or winsize.rows != newWinsize.rows) {
-                state.request_reload();
-            }
+    while (!runtime.should_exit(state) and !runtime.should_reload(state)) {
+        if (fire_state.consume_power()) {
+            context.matrix.switch_fire();
         }
+
+        try printer.print(console.RESET_CURSOR);
+
+        if (config.debug) {
+            try debug.print_debug(
+                state,
+                fire_state,
+                persistent,
+                scratch,
+                config,
+                printer,
+                &context,
+            );
+        }
+
+        try context.matrix_printer.print(&context.matrix);
+
+        if (!state.pause.load(.acquire)) {
+            try context.matrix.next(
+                fire_state.wind.load(.acquire),
+                fire_state.oxygen.load(.acquire),
+            );
+        }
+
+        if (config.controls) {
+            try debug.print_controls(printer);
+        }
+
+        const speed = state.speed_ms.load(.acquire);
+        try state.wait_for_frame(speed * std.time.ns_per_ms);
+
+        printer.reset();
+
+        const newWinsize = try console.winsize();
+        if (winsize.cols != newWinsize.cols or winsize.rows != newWinsize.rows) {
+            state.request_reload();
+        }
+
+        context.counter.frame_increment();
     }
 }
 
