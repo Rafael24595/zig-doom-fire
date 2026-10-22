@@ -35,7 +35,7 @@ pub const RenderContext = struct {
     /// Returns an error if initialization or matrix construction fails.
     pub fn init(
         self: *@This(),
-        allocator: *std.mem.Allocator,
+        allocator: std.mem.Allocator,
         winsize: console.WinSize,
         config: *const configuration.Configuration,
         printer: *Printer,

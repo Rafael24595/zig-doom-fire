@@ -90,7 +90,7 @@ pub fn run(
         };
     }
 
-    var persistent = persistentAllocator.allocator();
+    const persistent = persistentAllocator.allocator();
 
     var lcg = MiniLCG.init(config.seed);
 
@@ -114,7 +114,7 @@ pub fn run(
         _ = state.consume_reload();
 
         try run_render_cycle(
-            &persistent,
+            persistent,
             persistentAllocator,
             scratchAllocator,
             state,
@@ -127,7 +127,7 @@ pub fn run(
 }
 
 inline fn run_render_cycle(
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     state: *runtime.RuntimeState,

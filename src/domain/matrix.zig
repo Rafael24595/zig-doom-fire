@@ -3,7 +3,7 @@ const std = @import("std");
 const MiniLCG = @import("terminal_kit").mini_lcg.MiniLCG;
 
 pub const LinearMatrix = struct {
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
 
     lcg: *MiniLCG,
 
@@ -16,7 +16,7 @@ pub const LinearMatrix = struct {
 
     matrix: ?[]usize = null,
 
-    pub fn init(allocator: *std.mem.Allocator, lcg: *MiniLCG) LinearMatrix {
+    pub fn init(allocator: std.mem.Allocator, lcg: *MiniLCG) LinearMatrix {
         return LinearMatrix{
             .allocator = allocator,
             .lcg = lcg,
@@ -33,7 +33,12 @@ pub const LinearMatrix = struct {
         }
     }
 
-    pub fn build(self: *@This(), cols: usize, rows: usize, intensity: usize) !void {
+    pub fn build(
+        self: *@This(),
+        cols: usize,
+        rows: usize,
+        intensity: usize,
+    ) !void {
         self.intensity = intensity;
 
         self.cols = cols;

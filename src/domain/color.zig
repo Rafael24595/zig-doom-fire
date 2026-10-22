@@ -190,14 +190,22 @@ pub fn metaOf(m: Theme) ThemeMeta {
 }
 
 pub const ColorManager = struct {
-    allocator: *std.mem.Allocator,
+    allocator: std.mem.Allocator,
 
     table: [][3]u8,
 
-    pub fn init(allocator: *std.mem.Allocator, intensity: usize, theme: Theme) !@This() {
-        const colors = metaOf(theme).colors;
+    pub fn init(
+        allocator: std.mem.Allocator,
+        intensity: usize,
+        theme: Theme,
+    ) !@This() {
+        const colors = meta_of(theme).colors;
 
-        const table = try generate_palette(allocator, intensity, colors);
+        const table = try generate_palette(
+            allocator,
+            intensity,
+            colors,
+        );
 
         return ColorManager{
             .allocator = allocator,
@@ -218,7 +226,7 @@ pub const ColorManager = struct {
     }
 
     fn generate_palette(
-        allocator: *std.mem.Allocator,
+        allocator: std.mem.Allocator,
         intensity: usize,
         theme: []const WeightedColor,
     ) ![][3]u8 {
@@ -262,7 +270,7 @@ pub const ColorManager = struct {
         return palette;
     }
 
-    fn generate_accum(allocator: *std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
+    fn generate_accum(allocator: std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
         var total: f32 = 0;
         for (theme) |c| {
             total += c.weight;
