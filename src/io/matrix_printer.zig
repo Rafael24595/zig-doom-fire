@@ -36,7 +36,7 @@ pub const LinearMatrixPrinter = struct {
         const prefix = fmt_mtrx.prefix();
         const sufix = fmt_mtrx.sufix();
 
-        const meta = symbol.metaOf(mode_code);
+        const meta = symbol.meta_of(mode_code);
 
         const rows = matrix.rows_len();
         const cols = matrix.cols_len();

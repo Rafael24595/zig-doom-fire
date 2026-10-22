@@ -46,7 +46,7 @@ pub fn main() !void {
 
     defer printer.reset();
 
-    const config = try configuration.fromArgs(
+    const config = try configuration.from_args(
         persistentAllocator.allocator(),
         &printer,
     );
@@ -104,7 +104,7 @@ pub fn run(
 
     var input_thread = try std.Thread.spawn(
         .{},
-        runInputLoop,
+        run_input_loop,
         .{ state, fire_state },
     );
 
@@ -196,7 +196,7 @@ inline fn run_render_cycle(
     }
 }
 
-fn runInputLoop(
+fn run_input_loop(
     state: *runtime.RuntimeState,
     fire_state: *FireState,
 ) !void {

@@ -25,6 +25,6 @@ const ThemeMap = [_]ThemeMeta{
     .{ .active_char = "█", .inactive_char = " ", .total_bytes = 3 },
 };
 
-pub fn metaOf(m: Theme) ThemeMeta {
+pub fn meta_of(m: Theme) ThemeMeta {
     return ThemeMap[@intFromEnum(m)];
 }
