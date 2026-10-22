@@ -225,7 +225,7 @@ pub const ColorManager = struct {
         return self.table[i];
     }
 
-    fn generate_palette(
+    inline fn generate_palette(
         allocator: std.mem.Allocator,
         intensity: usize,
         theme: []const WeightedColor,
@@ -270,7 +270,7 @@ pub const ColorManager = struct {
         return palette;
     }
 
-    fn generate_accum(allocator: std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
+    inline fn generate_accum(allocator: std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
         var total: f32 = 0;
         for (theme) |c| {
             total += c.weight;
@@ -287,7 +287,7 @@ pub const ColorManager = struct {
         return accum;
     }
 
-    fn index_of_accum(accum: []f32, t: f32) usize {
+    inline fn index_of_accum(accum: []f32, t: f32) usize {
         var idx: usize = 0;
         while (idx < accum.len and t > accum[idx]) {
             idx += 1;
@@ -295,7 +295,7 @@ pub const ColorManager = struct {
         return idx;
     }
 
-    fn lerp_rgb(a: [3]u8, b: [3]u8, t: f32) [3]u8 {
+    inline fn lerp_rgb(a: [3]u8, b: [3]u8, t: f32) [3]u8 {
         return .{
             lerp(a[0], b[0], t),
             lerp(a[1], b[1], t),
@@ -303,7 +303,7 @@ pub const ColorManager = struct {
         };
     }
 
-    fn lerp(a: u8, b: u8, t: f32) u8 {
+    inline fn lerp(a: u8, b: u8, t: f32) u8 {
         const fa: f32 = @floatFromInt(a);
         const fb: f32 = @floatFromInt(b);
 

@@ -58,7 +58,7 @@ pub const LinearMatrix = struct {
         return self.on_fire();
     }
 
-    fn on_fire(self: *@This()) void {
+    inline fn on_fire(self: *@This()) void {
         for (0..self.cols) |x| {
             const last_r = self.idx(self.rows - 1, x);
             self.matrix.?[last_r] = self.intensity;
@@ -66,7 +66,7 @@ pub const LinearMatrix = struct {
         self.status = true;
     }
 
-    fn off_fire(self: *@This()) void {
+    inline fn off_fire(self: *@This()) void {
         for (0..self.cols) |x| {
             const last_r = self.idx(self.rows - 1, x);
             self.matrix.?[last_r] = 0;
