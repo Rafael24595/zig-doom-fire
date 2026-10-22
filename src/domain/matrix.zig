@@ -74,19 +74,19 @@ pub const LinearMatrix = struct {
         self.status = false;
     }
 
-    pub fn intensity_len(self: *@This()) usize {
+    pub fn intensity_len(self: @This()) usize {
         return self.intensity;
     }
 
-    pub fn vector(self: *@This()) ?[]usize {
+    pub fn vector(self: @This()) ?[]usize {
         return self.matrix;
     }
 
-    pub fn cols_len(self: *@This()) usize {
+    pub fn cols_len(self: @This()) usize {
         return self.cols;
     }
 
-    pub fn rows_len(self: *@This()) usize {
+    pub fn rows_len(self: @This()) usize {
         return self.rows;
     }
 
@@ -150,7 +150,7 @@ pub const LinearMatrix = struct {
         return decay;
     }
 
-    inline fn idx(self: *@This(), y: usize, x: usize) usize {
+    inline fn idx(self: @This(), y: usize, x: usize) usize {
         return y * self.cols + x;
     }
 };
