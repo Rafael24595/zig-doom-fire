@@ -102,10 +102,10 @@ pub const Configuration = struct {
     intensity_per: f32 = 0.60,
     intensity: usize = 0,
 
-    theme_symbol: symbol.Theme = symbol.Theme.classic,
-    theme_color: color.Theme = color.Theme.warm,
+    theme_symbol: symbol.Theme = .classic,
+    theme_color: color.Theme = .warm,
 
-    color_mode: formatter.FormatterCode = formatter.FormatterCode.RGB,
+    color_mode: formatter.FormatterCode = .rgb,
 
     formatter_matrix: formatter.FormatterMatrixUnion = formatter.FormatterMatrixUnion{ .unfo = .{} },
     formatter_cell: formatter.FormatterCellUnion = formatter.FormatterCellUnion{ .unfo = .{} },
