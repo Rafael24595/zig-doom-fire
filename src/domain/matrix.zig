@@ -6,6 +6,7 @@ const FIRE_SOURCE_ROW_OFFSET: usize = 2;
 
 pub const BuildError = error{
     InvalidDimensions,
+    MatrixTooLarge,
 };
 
 pub const LinearMatrix = struct {
@@ -49,14 +50,23 @@ pub const LinearMatrix = struct {
             return BuildError.InvalidDimensions;
         }
 
+        const len = std.math.mul(usize, cols, rows) catch {
+            return BuildError.MatrixTooLarge;
+        };
+
+        const matrix = try self.allocator.alloc(usize, len);
+        @memset(matrix, 0);
+
+        if (self.matrix) |old_matrix| {
+            self.allocator.free(old_matrix);
+        }
+
         self.intensity = intensity;
 
         self.cols = cols;
         self.rows = rows;
 
-        self.matrix = try self.allocator.alloc(usize, cols * rows);
-
-        @memset(self.matrix.?, 0);
+        self.matrix = matrix;
 
         self.on_fire();
     }
