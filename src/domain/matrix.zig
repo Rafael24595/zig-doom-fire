@@ -4,6 +4,10 @@ const MiniLCG = @import("terminal_kit").mini_lcg.MiniLCG;
 
 const FIRE_SOURCE_ROW_OFFSET: usize = 2;
 
+pub const BuildError = error{
+    InvalidDimensions,
+};
+
 pub const LinearMatrix = struct {
     allocator: std.mem.Allocator,
 
@@ -41,6 +45,10 @@ pub const LinearMatrix = struct {
         rows: usize,
         intensity: usize,
     ) !void {
+        if (cols == 0 or rows < 2) {
+            return BuildError.InvalidDimensions;
+        }
+
         self.intensity = intensity;
 
         self.cols = cols;
