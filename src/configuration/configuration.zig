@@ -17,6 +17,11 @@ const color = @import("../domain/color.zig");
 
 const formatter = @import("../io/formatter.zig");
 
+const frame_pause_ms: u64 = switch (builtin.os.tag) {
+    .windows => 45,
+    else => 50,
+};
+
 const FLAG_HELP: Flag = Flag{
     .flag_short = "-h",
     .flag_long = "--help",
@@ -97,7 +102,7 @@ pub const Configuration = struct {
 
     start_ms: i64 = 0,
 
-    milliseconds: u64 = 50,
+    milliseconds: u64 = frame_pause_ms,
 
     intensity_per: f32 = 0.60,
     intensity: usize = 0,
