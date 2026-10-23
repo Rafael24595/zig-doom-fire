@@ -2,6 +2,7 @@ const std = @import("std");
 
 const kit_color = @import("terminal_kit").color;
 
+/// Defines the available color palettes for matrix rendering.
 pub const Theme = enum {
     ash,
     warm,
@@ -19,6 +20,10 @@ pub const Theme = enum {
     //rainbow,
 };
 
+/// Describes a color palette using RGB colors and relative weights.
+///
+/// Weights determine how much of the generated intensity range is
+/// allocated to each color. They are normalized during palette generation.
 pub const ThemeMeta = struct {
     colors: []const WeightedColor,
 };
@@ -189,11 +194,26 @@ pub fn meta_of(m: Theme) ThemeMeta {
     return ThemeMap[@intFromEnum(m)];
 }
 
+/// Generates and owns a color palette for a selected theme.
+///
+/// The palette contains `intensity + 1` RGB entries, with index `0`
+/// reserved. The allocated palette is owned by this manager and is
+/// released by calling `free`.
 pub const ColorManager = struct {
+    /// Allocator used to allocate and release the palette.
     allocator: std.mem.Allocator,
 
+    /// Generated RGB colors indexed by palette intensity.
     table: [][3]u8,
 
+    /// Creates a color manager with a palette generated from `theme`.
+    ///
+    /// The resulting palette contains `intensity + 1` entries. Palette
+    /// generation interpolates between the theme's weighted RGB colors.
+    ///
+    /// The caller must call `free` to release the allocated palette.
+    ///
+    /// Returns an allocation error if memory allocation fails.
     pub fn init(
         allocator: std.mem.Allocator,
         intensity: usize,
@@ -213,11 +233,19 @@ pub const ColorManager = struct {
         };
     }
 
+    /// Releases the memory allocated for the palette.
+    ///
+    /// The manager must not be used after this call. Call this method
+    /// only once for each successfully initialized manager.
     pub fn free(self: *@This()) void {
         self.allocator.free(self.table);
         self.table = undefined;
     }
 
+    /// Returns the RGB color at palette index `i`, if available.
+    ///
+    /// Index `0` is reserved and always returns `null`. Indices greater
+    /// than or equal to the palette length also return `null`.
     pub fn find(self: @This(), i: usize) ?[3]u8 {
         if (i >= self.table.len or i == 0) {
             return null;

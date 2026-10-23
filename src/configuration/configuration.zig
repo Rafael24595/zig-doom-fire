@@ -94,27 +94,52 @@ const FLAG_COLOR_MODE: Flag = Flag{
     .aux_desc = "(use \"help\" to list available modes)",
 };
 
+/// Stores the application settings parsed from command-line arguments,
+/// including rendering options, animation timing and matrix appearance.
 pub const Configuration = struct {
+    /// Enables diagnostic information during execution.
     debug: bool = false,
+    /// Enables the display of keyboard controls.
     controls: bool = false,
 
+    /// Random seed used to initialize the matrix generation.
+    /// A value of zero causes the seed to be derived from the current timestamp.
     seed: u64 = 0,
 
+    /// Application start timestamp, in milliseconds since the Unix epoch.
     start_ms: i64 = 0,
 
+    /// Delay between animation frames, in milliseconds.
     milliseconds: u64 = frame_pause_ms,
 
+    /// Fraction of the matrix height used to derive the default intensity.
+    ///
+    /// Used only when `intensity` is zero.
     intensity_per: f32 = 0.60,
+    /// Explicit matrix intensity.
+    ///
+    /// A value greater than zero overrides the intensity derived from
+    /// `intensity_per` and the matrix height.
     intensity: usize = 0,
 
+    /// Symbol theme used to render the matrix.
     theme_symbol: symbol.Theme = .classic,
+    /// Color theme used to render the matrix.
     theme_color: color.Theme = .warm,
 
+    /// Color formatting mode used by the output formatters.
     color_mode: formatter.FormatterCode = .rgb,
 
+    /// Formatter configuration for the matrix output.
     formatter_matrix: formatter.FormatterMatrixUnion = formatter.FormatterMatrixUnion{ .unfo = .{} },
+    /// Formatter configuration for individual cells.
     formatter_cell: formatter.FormatterCellUnion = formatter.FormatterCellUnion{ .unfo = .{} },
 
+    /// Parses command-line arguments into a configuration.
+    ///
+    /// Uses `allocator` for temporary allocations and `printer` for
+    /// formatting or reporting command-line information.
+    /// Exits the process for help, version, or unknown arguments.
     pub fn init(allocator: std.mem.Allocator, printer: *Printer, args: [][:0]u8) !@This() {
         defer printer.reset();
 
@@ -292,6 +317,10 @@ pub const Configuration = struct {
     }
 };
 
+/// Builds the application configuration from the current process arguments.
+///
+/// Allocates the argument list using `allocator` and releases it before
+/// returning. Propagates errors from argument allocation and parsing.
 pub fn from_args(allocator: std.mem.Allocator, printer: *Printer) !Configuration {
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);

@@ -24,6 +24,8 @@ const MatrixPrinter = @import("io/matrix_printer.zig").LinearMatrixPrinter;
 const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
 
+/// Initializes application resources, configures the terminal, and starts
+/// the rendering loop.
 pub fn main() !void {
     var persistent = AllocatorTracer.init(
         std.heap.page_allocator,
@@ -39,7 +41,7 @@ pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(
         scratch.allocator(),
     );
-    
+
     defer arena.deinit();
 
     var printer = Printer{
@@ -77,6 +79,8 @@ pub fn main() !void {
     );
 }
 
+/// Runs the application session, coordinating input handling and rendering
+/// until termination is requested.
 pub fn run(
     state: *runtime.RuntimeState,
     fire_state: *FireState,

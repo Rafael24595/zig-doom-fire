@@ -15,6 +15,10 @@ const configuration = @import("../configuration/configuration.zig");
 const FireState = @import("./fire_state.zig").FireState;
 const RenderContext = @import("./render_context.zig").RenderContext;
 
+/// Prints diagnostic information about the application, runtime state,
+/// memory usage, rendering configuration, and current matrix dimensions.
+///
+/// Returns an error if memory allocation, time formatting, or printing fails.
 pub fn print_debug(
     state: *RuntimeState,
     fire_state: *FireState,
@@ -80,6 +84,9 @@ pub fn print_debug(
     });
 }
 
+/// Prints the keyboard shortcuts available to control the application.
+///
+/// Returns an error if printing the controls fails.
 pub fn print_controls(printer: *Printer) !void {
     try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc oxygen: {s} | Dec oxygen: {s} | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
         "p, space",

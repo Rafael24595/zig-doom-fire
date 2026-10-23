@@ -19,7 +19,11 @@ const wind_default = 0;
 
 /// Holds the resources and state required to render the matrix,
 /// including its matrix data, output formatter, and frame counter.
+///
+/// Call `init` before using the context and `deinit` to release its
+/// resources after successful initialization.
 pub const RenderContext = struct {
+    /// Manages color intensity and formatting for the fire matrix.
     color_manager: color.ColorManager,
     /// Matrix containing the data to be rendered.
     matrix: LinearMatrix,
@@ -91,6 +95,9 @@ pub const RenderContext = struct {
         self.matrix_printer.free();
     }
 
+    /// Switches the fire state in the matrix.
+    ///
+    /// The exact effect depends on the implementation of `LinearMatrix.switch_fire`.
     pub fn toggle_power(self: *@This()) void {
         self.matrix.switch_fire();
     }
