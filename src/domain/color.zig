@@ -231,6 +231,10 @@ pub const ColorManager = struct {
         theme: []const WeightedColor,
     ) ![][3]u8 {
         var palette = try allocator.alloc([3]u8, intensity + 1);
+        errdefer allocator.free(palette);
+
+        @memset(palette, .{ 0, 0, 0 });
+
         if (theme.len == 0 or intensity == 0) {
             return palette;
         }
