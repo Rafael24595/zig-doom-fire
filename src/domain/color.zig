@@ -315,3 +315,60 @@ pub const ColorManager = struct {
         return @intFromFloat(result);
     }
 };
+
+test "ColorManager generates a palette with the requested length" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(9, manager.table.len);
+}
+
+test "ColorManager reserves index zero" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(0) == null);
+}
+
+test "ColorManager returns null for out-of-range indices" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(9) == null);
+    try std.testing.expect(manager.find(100) == null);
+}
+
+test "ColorManager generates the expected grayscale endpoints" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(
+        [3]u8{ 0, 0, 0 },
+        manager.table[1],
+    );
+
+    try std.testing.expectEqual(
+        [3]u8{ 255, 255, 255 },
+        manager.table[8],
+    );
+}
+
+test "ColorManager intensity one returns the final theme color" {
+    var manager = try ColorManager.init(std.testing.allocator, 1, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(0) == null);
+
+    try std.testing.expectEqual(
+        [3]u8{ 255, 255, 255 },
+        manager.find(1).?,
+    );
+}
+
+test "ColorManager supports zero intensity" {
+    var manager = try ColorManager.init(std.testing.allocator, 0, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(1, manager.table.len);
+    try std.testing.expect(manager.find(0) == null);
+}

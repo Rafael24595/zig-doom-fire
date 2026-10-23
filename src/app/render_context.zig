@@ -153,3 +153,39 @@ test "calculate_padding reserves space for debug output and controls" {
 
     try std.testing.expectEqual(5, calculate_padding(&config));
 }
+
+test "calculate_intensity returns the configured intensity when positive" {
+    const config = configuration.Configuration{
+        .intensity = 12,
+        .intensity_per = 0.5,
+    };
+
+    try std.testing.expectEqual(12, calculate_intensity(&config, 20));
+}
+
+test "calculate_intensity derives intensity from row count" {
+    const config = configuration.Configuration{
+        .intensity = 0,
+        .intensity_per = 0.5,
+    };
+
+    try std.testing.expectEqual(10, calculate_intensity(&config, 20));
+}
+
+test "calculate_intensity returns zero for zero rows" {
+    const config = configuration.Configuration{
+        .intensity = 0,
+        .intensity_per = 0.5,
+    };
+
+    try std.testing.expectEqual(0, calculate_intensity(&config, 0));
+}
+
+test "calculate_intensity truncates fractional results" {
+    const config = configuration.Configuration{
+        .intensity = 0,
+        .intensity_per = 0.35,
+    };
+
+    try std.testing.expectEqual(3, calculate_intensity(&config, 10));
+}

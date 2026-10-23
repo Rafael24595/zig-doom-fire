@@ -174,3 +174,189 @@ pub const LinearMatrix = struct {
         return y * self.cols + x;
     }
 };
+
+test "LinearMatrix initializes empty" {
+    var lcg = MiniLCG.init(1234);
+    const matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+
+    try std.testing.expect(matrix.vector() == null);
+    try std.testing.expectEqual(0, matrix.intensity_len());
+    try std.testing.expectEqual(0, matrix.cols_len());
+    try std.testing.expectEqual(0, matrix.rows_len());
+    try std.testing.expect(!matrix.status);
+}
+
+test "LinearMatrix initializes with default state" {
+    var lcg = MiniLCG.init(1234);
+    const matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+
+    try std.testing.expect(!matrix.status);
+
+    try std.testing.expectEqual(0, matrix.intensity_len());
+    try std.testing.expectEqual(0, matrix.cols_len());
+    try std.testing.expectEqual(0, matrix.rows_len());
+
+    try std.testing.expect(matrix.vector() == null);
+}
+
+test "LinearMatrix builds a zeroed matrix and enables fire" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.build(3, 4, 10);
+
+    try std.testing.expectEqual(3, matrix.cols_len());
+    try std.testing.expectEqual(4, matrix.rows_len());
+    try std.testing.expectEqual(10, matrix.intensity_len());
+
+    try std.testing.expect(matrix.status);
+
+    const values = matrix.vector().?;
+
+    try std.testing.expectEqual(12, values.len);
+
+    const source_row_start = 3 * 3;
+
+    for (values[0..source_row_start]) |value| {
+        try std.testing.expectEqual(0, value);
+    }
+
+    for (values[source_row_start..]) |value| {
+        try std.testing.expectEqual(10, value);
+    }
+}
+
+test "LinearMatrix free releases the matrix" {
+    var lcg = MiniLCG.init(1234);
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+
+    try matrix.build(2, 2, 5);
+    matrix.free();
+
+    try std.testing.expect(matrix.vector() == null);
+}
+
+test "LinearMatrix next preserves dimensions and avoids underflow" {
+    var lcg = MiniLCG.init(1234);
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.build(4, 5, 10);
+    try matrix.next(0, 0);
+
+    try std.testing.expectEqual(4, matrix.cols_len());
+    try std.testing.expectEqual(5, matrix.rows_len());
+
+    for (matrix.vector().?) |value| {
+        try std.testing.expect(value <= 10);
+    }
+}
+
+test "LinearMatrix switches fire off and on" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.build(2, 3, 7);
+
+    matrix.switch_fire();
+    try std.testing.expect(!matrix.status);
+
+    const values_off = matrix.vector().?;
+    try std.testing.expectEqual(0, values_off[4]);
+    try std.testing.expectEqual(0, values_off[5]);
+
+    matrix.switch_fire();
+    try std.testing.expect(matrix.status);
+
+    const values_on = matrix.vector().?;
+    try std.testing.expectEqual(7, values_on[4]);
+    try std.testing.expectEqual(7, values_on[5]);
+}
+
+test "LinearMatrix rejects invalid dimensions" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try std.testing.expectError(
+        BuildError.InvalidDimensions,
+        matrix.build(0, 4, 10),
+    );
+
+    try std.testing.expectError(
+        BuildError.InvalidDimensions,
+        matrix.build(4, 0, 10),
+    );
+
+    try std.testing.expectError(
+        BuildError.InvalidDimensions,
+        matrix.build(4, 1, 10),
+    );
+
+    try std.testing.expect(matrix.vector() == null);
+}
+
+test "LinearMatrix rejects dimension multiplication overflow" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try std.testing.expectError(
+        BuildError.MatrixTooLarge,
+        matrix.build(std.math.maxInt(usize), 2, 10),
+    );
+
+    try std.testing.expect(matrix.vector() == null);
+}
+
+test "LinearMatrix preserves existing matrix when validation fails" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.build(2, 3, 5);
+
+    const old_values = matrix.vector().?;
+    const old_ptr = old_values.ptr;
+
+    try std.testing.expectError(
+        error.InvalidDimensions,
+        matrix.build(0, 3, 9),
+    );
+
+    try std.testing.expectEqual(2, matrix.cols_len());
+    try std.testing.expectEqual(3, matrix.rows_len());
+    try std.testing.expectEqual(5, matrix.intensity_len());
+
+    try std.testing.expectEqual(old_ptr, matrix.vector().?.ptr);
+}
+
+test "LinearMatrix next does nothing before build" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.next(0, 0);
+
+    try std.testing.expect(matrix.vector() == null);
+}
+
+test "LinearMatrix next preserves matrix length" {
+    var lcg = MiniLCG.init(1234);
+
+    var matrix = LinearMatrix.init(std.testing.allocator, &lcg);
+    defer matrix.free();
+
+    try matrix.build(4, 5, 10);
+    try matrix.next(0, 0);
+
+    try std.testing.expectEqual(20, matrix.vector().?.len);
+}

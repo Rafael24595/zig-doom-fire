@@ -297,3 +297,21 @@ pub fn from_args(allocator: std.mem.Allocator, printer: *Printer) !Configuration
     defer std.process.argsFree(allocator, args);
     return Configuration.init(allocator, printer, args);
 }
+
+test "Configuration uses the expected default values" {
+    const config = Configuration{};
+
+    try std.testing.expect(!config.debug);
+    try std.testing.expect(!config.controls);
+
+    try std.testing.expectEqual(@as(u64, 0), config.seed);
+    try std.testing.expectEqual(@as(i64, 0), config.start_ms);
+
+    try std.testing.expectEqual(frame_pause_ms, config.milliseconds);
+    try std.testing.expectEqual(@as(f32, 0.60), config.intensity_per);
+    try std.testing.expectEqual(@as(usize, 0), config.intensity);
+
+    try std.testing.expectEqual(symbol.Theme.classic, config.theme_symbol);
+    try std.testing.expectEqual(color.Theme.warm, config.theme_color);
+    try std.testing.expectEqual(formatter.FormatterCode.rgb, config.color_mode);
+}
