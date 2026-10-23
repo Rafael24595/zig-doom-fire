@@ -121,7 +121,6 @@ inline fn calculate_intensity(config: *const configuration.Configuration, rows: 
 test "calculate_padding returns zero when all options are disabled" {
     const config = configuration.Configuration{
         .debug = false,
-        .inheritance = false,
         .controls = false,
     };
 
@@ -131,29 +130,26 @@ test "calculate_padding returns zero when all options are disabled" {
 test "calculate_padding reserves space for debug output" {
     const config = configuration.Configuration{
         .debug = true,
-        .inheritance = false,
         .controls = false,
     };
 
     try std.testing.expectEqual(4, calculate_padding(&config));
 }
 
-test "calculate_padding reserves space for inheritance information" {
+test "calculate_padding reserves space for controls" {
     const config = configuration.Configuration{
-        .debug = true,
-        .inheritance = true,
-        .controls = false,
+        .debug = false,
+        .controls = true,
     };
 
-    try std.testing.expectEqual(5, calculate_padding(&config));
+    try std.testing.expectEqual(1, calculate_padding(&config));
 }
 
 test "calculate_padding reserves space for debug output and controls" {
     const config = configuration.Configuration{
         .debug = true,
-        .inheritance = true,
         .controls = true,
     };
 
-    try std.testing.expectEqual(6, calculate_padding(&config));
+    try std.testing.expectEqual(5, calculate_padding(&config));
 }
