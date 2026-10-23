@@ -2,6 +2,8 @@ const std = @import("std");
 
 const MiniLCG = @import("terminal_kit").mini_lcg.MiniLCG;
 
+const FIRE_SOURCE_ROW_OFFSET: usize = 2;
+
 pub const LinearMatrix = struct {
     allocator: std.mem.Allocator,
 
@@ -95,7 +97,7 @@ pub const LinearMatrix = struct {
             return;
         }
 
-        const last_row = self.rows - 2;
+        const last_row = self.rows - FIRE_SOURCE_ROW_OFFSET;
         const wind_fix = wind + 1;
 
         var matrix = self.matrix.?;
