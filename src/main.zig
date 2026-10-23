@@ -25,18 +25,21 @@ const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
 
 pub fn main() !void {
-    var persistentAllocator = AllocatorTracer.init(
+    var persistent = AllocatorTracer.init(
         std.heap.page_allocator,
     );
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    var scratchAllocator = AllocatorTracer.init(
+    var scratch = AllocatorTracer.init(
         gpa.allocator(),
     );
 
-    var arena = std.heap.ArenaAllocator.init(scratchAllocator.allocator());
+    var arena = std.heap.ArenaAllocator.init(
+        scratch.allocator(),
+    );
+    
     defer arena.deinit();
 
     var printer = Printer{
@@ -47,7 +50,7 @@ pub fn main() !void {
     defer printer.reset();
 
     const config = try configuration.from_args(
-        persistentAllocator.allocator(),
+        persistent.allocator(),
         &printer,
     );
 
@@ -67,8 +70,8 @@ pub fn main() !void {
     try run(
         &state,
         &fire_state,
-        &persistentAllocator,
-        &scratchAllocator,
+        &persistent,
+        &scratch,
         &config,
         &printer,
     );
@@ -77,8 +80,8 @@ pub fn main() !void {
 pub fn run(
     state: *runtime.RuntimeState,
     fire_state: *FireState,
-    persistentAllocator: *AllocatorTracer,
-    scratchAllocator: *AllocatorTracer,
+    persistent: *AllocatorTracer,
+    scratch: *AllocatorTracer,
     config: *const configuration.Configuration,
     printer: *Printer,
 ) !void {
@@ -90,7 +93,7 @@ pub fn run(
         };
     }
 
-    const persistent = persistentAllocator.allocator();
+    const allocator = persistent.allocator();
 
     var lcg = MiniLCG.init(config.seed);
 
@@ -114,9 +117,9 @@ pub fn run(
         _ = state.consume_reload();
 
         try run_render_cycle(
+            allocator,
             persistent,
-            persistentAllocator,
-            scratchAllocator,
+            scratch,
             state,
             fire_state,
             config,
