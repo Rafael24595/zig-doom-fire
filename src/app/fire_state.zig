@@ -26,11 +26,11 @@ pub const FireState = struct {
         self.wind.store(wind_fix, .release);
     }
 
-    pub fn mod_oxigen(self: *@This(), mod: isize) void {
-        self.set_oxigen(self.oxygen.load(.acquire) + mod);
+    pub fn mod_oxygen(self: *@This(), mod: isize) void {
+        self.set_oxygen(self.oxygen.load(.acquire) + mod);
     }
 
-    inline fn set_oxigen(self: *@This(), oxygen: isize) void {
+    inline fn set_oxygen(self: *@This(), oxygen: isize) void {
         const oxygen_fix = math.clamp(oxygen, min_oxygen, max_oxygen);
         self.oxygen.store(oxygen_fix, .release);
     }

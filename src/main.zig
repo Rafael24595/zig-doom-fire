@@ -221,10 +221,10 @@ fn run_input_loop(
                 fire_state.request_power();
             },
             'w', 'W' => {
-                fire_state.mod_oxigen(1);
+                fire_state.mod_oxygen(1);
             },
             'x', 'X' => {
-                fire_state.mod_oxigen(-1);
+                fire_state.mod_oxygen(-1);
             },
             'a', 'A' => {
                 fire_state.mod_wind(1);
