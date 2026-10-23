@@ -32,7 +32,7 @@ pub const FireState = struct {
 
     inline fn set_oxigen(self: *@This(), oxygen: isize) void {
         const oxygen_fix = math.clamp(oxygen, min_oxygen, max_oxygen);
-        self.wind.store(oxygen_fix, .release);
+        self.oxygen.store(oxygen_fix, .release);
     }
 
     pub fn request_power(self: *@This()) void {
