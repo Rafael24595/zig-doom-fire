@@ -1,16 +1,25 @@
+/// Available character themes for rendering the fire effect.
 pub const Theme = enum {
-    Classic,
-    Star,
-    Arrow,
-    Plus,
-    Triangle,
-    Spark,
-    Block,
+    classic,
+    star,
+    arrow,
+    plus,
+    triangle,
+    spark,
+    block,
 };
 
+/// Defines the characters and byte width used to render a theme.
 pub const ThemeMeta = struct {
+    /// Character used to represent an active cell.
     active_char: []const u8,
+    /// Character used to represent an inactive cell.
+    ///
+    /// A single-byte space is recommended for efficient rendering.
     inactive_char: []const u8,
+    /// UTF-8 byte length of the active character.
+    ///
+    /// This value must match `active_char.len`.
     total_bytes: u8,
 };
 
@@ -25,6 +34,7 @@ const ThemeMap = [_]ThemeMeta{
     .{ .active_char = "█", .inactive_char = " ", .total_bytes = 3 },
 };
 
-pub fn metaOf(m: Theme) ThemeMeta {
+/// Returns the rendering metadata associated with `theme`.
+pub fn meta_of(m: Theme) ThemeMeta {
     return ThemeMap[@intFromEnum(m)];
 }

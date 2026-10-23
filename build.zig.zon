@@ -1,9 +1,14 @@
 .{
     .name = .zig_doom_fire,
-    .version = "0.3.3",
+    .version = "0.4.0",
     .fingerprint = 0x9dd983949858a9d,
     .minimum_zig_version = "0.15.1",
-    .dependencies = .{},
+    .dependencies = .{
+        .terminal_kit = .{
+            .url = "https://github.com/Rafael24595/zig-terminal-kit/releases/download/0.8.0/zig_terminal_kit-0.8.0.tar.gz",
+            .hash = "zig_terminal_kit-0.8.0-MaGLjp8TAQD5Hin_q5HpRLICEU7C7ULjpjifpzDNkc_e",
+        },
+    },
     .paths = .{
         "build.zig",
         "build.zig.zon",

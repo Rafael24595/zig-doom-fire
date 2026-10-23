@@ -2,22 +2,24 @@ const std = @import("std");
 
 const build = @import("build.zig.zon");
 
+const terminal_kit = @import("terminal_kit");
+
+const Printer = terminal_kit.printer.Printer;
+
+const Flag = terminal_kit.configuration.Flag;
+const kit_conf = terminal_kit.configuration;
+
+const kit_color = terminal_kit.color;
+
 const matrix = @import("../domain/matrix.zig");
 const symbol = @import("../domain/symbol.zig");
 const color = @import("../domain/color.zig");
 
-const Printer = @import("../io/printer.zig").Printer;
 const formatter = @import("../io/formatter.zig");
 
-const TypeFormatter = @import("../commons/utils.zig").TypeFormatter;
-
-const Flag = struct {
-    flag_short: []const u8,
-    flag_long: ?[]const u8 = null,
-    type: ?[]const u8 = null,
-    desc: []const u8,
-    name: []const u8,
-    aux_desc: ?[]const u8 = null,
+const frame_pause_ms: u64 = switch (builtin.os.tag) {
+    .windows => 45,
+    else => 50,
 };
 
 const FLAG_HELP: Flag = Flag{
@@ -92,27 +94,52 @@ const FLAG_COLOR_MODE: Flag = Flag{
     .aux_desc = "(use \"help\" to list available modes)",
 };
 
+/// Stores the application settings parsed from command-line arguments,
+/// including rendering options, animation timing and matrix appearance.
 pub const Configuration = struct {
+    /// Enables diagnostic information during execution.
     debug: bool = false,
+    /// Enables the display of keyboard controls.
     controls: bool = false,
 
+    /// Random seed used to initialize the matrix generation.
+    /// A value of zero causes the seed to be derived from the current timestamp.
     seed: u64 = 0,
 
+    /// Application start timestamp, in milliseconds since the Unix epoch.
     start_ms: i64 = 0,
 
-    milliseconds: u64 = 50,
+    /// Delay between animation frames, in milliseconds.
+    milliseconds: u64 = frame_pause_ms,
 
+    /// Fraction of the matrix height used to derive the default intensity.
+    ///
+    /// Used only when `intensity` is zero.
     intensity_per: f32 = 0.60,
+    /// Explicit matrix intensity.
+    ///
+    /// A value greater than zero overrides the intensity derived from
+    /// `intensity_per` and the matrix height.
     intensity: usize = 0,
 
-    theme_symbol: symbol.Theme = symbol.Theme.Classic,
-    theme_color: color.Theme = color.Theme.Warm,
+    /// Symbol theme used to render the matrix.
+    theme_symbol: symbol.Theme = .classic,
+    /// Color theme used to render the matrix.
+    theme_color: color.Theme = .warm,
 
-    color_mode: formatter.FormatterCode = formatter.FormatterCode.RGB,
+    /// Color formatting mode used by the output formatters.
+    color_mode: formatter.FormatterCode = .rgb,
 
+    /// Formatter configuration for the matrix output.
     formatter_matrix: formatter.FormatterMatrixUnion = formatter.FormatterMatrixUnion{ .unfo = .{} },
+    /// Formatter configuration for individual cells.
     formatter_cell: formatter.FormatterCellUnion = formatter.FormatterCellUnion{ .unfo = .{} },
 
+    /// Parses command-line arguments into a configuration.
+    ///
+    /// Uses `allocator` for temporary allocations and `printer` for
+    /// formatting or reporting command-line information.
+    /// Exits the process for help, version, or unknown arguments.
     pub fn init(allocator: std.mem.Allocator, printer: *Printer, args: [][:0]u8) !@This() {
         defer printer.reset();
 
@@ -143,37 +170,37 @@ pub const Configuration = struct {
             }
 
             if (std.mem.eql(u8, arg, FLAG_SEED.flag_short)) {
-                config.seed = try config.parseInt(u64, printer, args, i, FLAG_SEED, null, null);
+                config.seed = try kit_conf.parse_int(u64, printer, args, i, FLAG_SEED, null, null);
                 i += 1;
                 continue;
             }
 
             if (std.mem.eql(u8, arg, FLAG_MILLISECONDS.flag_short)) {
-                config.milliseconds = try config.parseInt(u64, printer, args, i, FLAG_MILLISECONDS, null, 1000 * 3);
+                config.milliseconds = try kit_conf.parse_int(u64, printer, args, i, FLAG_MILLISECONDS, null, 1000 * 3);
                 i += 1;
                 continue;
             }
 
             if (std.mem.eql(u8, arg, FLAG_INTENSITY.flag_short)) {
-                config.intensity = try config.parseInt(usize, printer, args, i, FLAG_INTENSITY, null, null);
+                config.intensity = try kit_conf.parse_int(usize, printer, args, i, FLAG_INTENSITY, null, null);
                 i += 1;
                 continue;
             }
 
             if (std.mem.eql(u8, arg, FLAG_THEME_COLOR.flag_short)) {
-                config.theme_color = try config.parseEnum(color.Theme, printer, args, i, FLAG_THEME_COLOR);
+                config.theme_color = try kit_conf.parse_enum(color.Theme, printer, args, i, FLAG_THEME_COLOR);
                 i += 1;
                 continue;
             }
 
             if (std.mem.eql(u8, arg, FLAG_THEME_SYMBOL.flag_short)) {
-                config.theme_symbol = try config.parseEnum(symbol.Theme, printer, args, i, FLAG_THEME_SYMBOL);
+                config.theme_symbol = try kit_conf.parse_enum(symbol.Theme, printer, args, i, FLAG_THEME_SYMBOL);
                 i += 1;
                 continue;
             }
 
             if (std.mem.eql(u8, arg, FLAG_COLOR_MODE.flag_short)) {
-                config.color_mode = try config.parseEnum(formatter.FormatterCode, printer, args, i, FLAG_COLOR_MODE);
+                config.color_mode = try kit_conf.parse_enum(formatter.FormatterCode, printer, args, i, FLAG_COLOR_MODE);
                 i += 1;
                 continue;
             }
@@ -195,6 +222,21 @@ pub const Configuration = struct {
         return config;
     }
 
+    fn init_formatters(config: *Configuration) void {
+        switch (config.color_mode) {
+            formatter.FormatterCode.ANSI => {
+                config.formatter_cell = formatter.FormatterCellUnion{ .ansi = .{} };
+            },
+            formatter.FormatterCode.RGB => {
+                config.formatter_cell = formatter.FormatterCellUnion{ .rgb = .{} };
+            },
+        }
+
+        config.formatter_matrix = formatter.FormatterMatrixUnion{ .unfo = .{} };
+
+        return;
+    }
+
     pub fn print_help(allocator: std.mem.Allocator, printer: *Printer, config: Configuration) !void {
         const message = try format_flags(allocator, printer, config);
         defer allocator.free(message);
@@ -211,61 +253,61 @@ pub const Configuration = struct {
 
         try buffer.appendSlice(allocator, "\nUsage: zig-doom-fire          [options] \n\n");
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_HELP,
             .none,
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_VERSION,
             .none,
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_DEBUG,
             .{ .bool = config.debug },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_HELP_CONTROLS,
             .{ .bool = config.controls },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_SEED,
             .{ .str = "current time in ms" },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_MILLISECONDS,
             .{ .int = @intCast(config.milliseconds) },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_INTENSITY,
             .{ .str = intensity_default },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_THEME_COLOR,
             .{ .str = @tagName(config.theme_color) },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_THEME_SYMBOL,
             .{ .str = @tagName(config.theme_symbol) },
         ));
 
-        try buffer.appendSlice(allocator, try format_flag(
+        try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
             FLAG_COLOR_MODE,
             .{ .str = @tagName(config.color_mode) },
@@ -273,130 +315,32 @@ pub const Configuration = struct {
 
         return buffer.items;
     }
-
-    pub fn format_flag(printer: *Printer, flag: Flag, default: TypeFormatter) ![]u8 {
-        const flag_short = flag.flag_short;
-        const flag_desc = flag.desc;
-
-        var flag_long: []const u8 = "";
-        if (flag.flag_long != null) {
-            flag_long = flag.flag_long.?;
-        }
-
-        var flag_type: []const u8 = "";
-        if (flag.type != null) {
-            flag_type = flag.type.?;
-        }
-
-        var data = try printer.format("  {s:<3} {s:<12}  {s:<8}  {s}", .{ flag_short, flag_long, flag_type, flag_desc });
-
-        if (default != .none) {
-            const d = try default.format(printer);
-            data = try printer.format("{s} (default: {s})", .{ data, d });
-        }
-
-        if (flag.aux_desc != null) {
-            data = try printer.format("{s}\n{s:<32}{s}", .{ data, "", flag.aux_desc.? });
-        }
-
-        return try printer.format("{s} \n", .{data});
-    }
-
-    fn init_formatters(config: *Configuration) void {
-        switch (config.color_mode) {
-            formatter.FormatterCode.ANSI => {
-                config.formatter_cell = formatter.FormatterCellUnion{ .ansi = .{} };
-            },
-            formatter.FormatterCode.RGB => {
-                config.formatter_cell = formatter.FormatterCellUnion{ .rgb = .{} };
-            },
-        }
-
-        config.formatter_matrix = formatter.FormatterMatrixUnion{ .unfo = .{} };
-
-        return;
-    }
-
-    fn parseFloat(_: *@This(), comptime T: type, printer: *Printer, args: [][:0]u8, i: usize, flag: Flag, min: ?T, max: ?T) !T {
-        if (i + 1 >= args.len) {
-            try printer.printf("Missing argument for {s} ({s})\n", .{ flag.flag_short, flag.name });
-            std.process.exit(1);
-        }
-
-        const value = args[i + 1];
-        var result = std.fmt.parseFloat(T, value) catch {
-            try printer.printf("Invalid {s} value: {s}\n", .{ flag.name, value });
-            std.process.exit(1);
-        };
-
-        if (min != null) {
-            result = @max(result, min.?);
-        }
-
-        if (max != null) {
-            result = @min(result, max.?);
-        }
-
-        return result;
-    }
-
-    fn parseInt(_: *@This(), comptime T: type, printer: *Printer, args: [][:0]u8, i: usize, flag: Flag, min: ?T, max: ?T) !T {
-        if (i + 1 >= args.len) {
-            try printer.printf("Missing argument for {s} ({s})\n", .{ flag.flag_short, flag.name });
-            std.process.exit(1);
-        }
-
-        const value = args[i + 1];
-        var result = std.fmt.parseInt(T, value, 10) catch {
-            try printer.printf("Invalid {s} value: {s}\n", .{ flag.name, value });
-            std.process.exit(1);
-        };
-
-        if (min != null) {
-            result = @max(result, min.?);
-        }
-
-        if (max != null) {
-            result = @min(result, max.?);
-        }
-
-        return result;
-    }
-
-    fn parseEnum(self: *@This(), comptime T: type, printer: *Printer, args: [][:0]u8, i: usize, flag: Flag) !T {
-        if (i + 1 >= args.len) {
-            try printer.printf("Missing argument for {s} ({s})\n", .{ flag.flag_short, flag.name });
-            std.process.exit(1);
-        }
-
-        const value = args[i + 1];
-        if (std.mem.eql(u8, value, "help")) {
-            try self.printEnumOptionsWithTitle(T, flag.name, printer);
-            std.process.exit(0);
-        }
-
-        return std.meta.stringToEnum(T, value) orelse {
-            try printer.printf("Invalid {s}: {s}\n", .{ flag.name, value });
-            try self.printEnumOptions(T, printer);
-            std.process.exit(1);
-        };
-    }
-
-    fn printEnumOptions(self: *@This(), comptime T: type, printer: *Printer) !void {
-        try self.printEnumOptionsWithTitle(T, "Available", printer);
-    }
-
-    fn printEnumOptionsWithTitle(_: *@This(), comptime T: type, title: []const u8, printer: *Printer) !void {
-        const info = @typeInfo(T);
-        try printer.printf("{s} options:\n", .{title});
-        inline for (info.@"enum".fields) |field| {
-            try printer.printf(" - {s}\n", .{field.name});
-        }
-    }
 };
 
-pub fn fromArgs(allocator: std.mem.Allocator, printer: *Printer) !Configuration {
+/// Builds the application configuration from the current process arguments.
+///
+/// Allocates the argument list using `allocator` and releases it before
+/// returning. Propagates errors from argument allocation and parsing.
+pub fn from_args(allocator: std.mem.Allocator, printer: *Printer) !Configuration {
     const args = try std.process.argsAlloc(allocator);
     defer std.process.argsFree(allocator, args);
     return Configuration.init(allocator, printer, args);
+}
+
+test "Configuration uses the expected default values" {
+    const config = Configuration{};
+
+    try std.testing.expect(!config.debug);
+    try std.testing.expect(!config.controls);
+
+    try std.testing.expectEqual(@as(u64, 0), config.seed);
+    try std.testing.expectEqual(@as(i64, 0), config.start_ms);
+
+    try std.testing.expectEqual(frame_pause_ms, config.milliseconds);
+    try std.testing.expectEqual(@as(f32, 0.60), config.intensity_per);
+    try std.testing.expectEqual(@as(usize, 0), config.intensity);
+
+    try std.testing.expectEqual(symbol.Theme.classic, config.theme_symbol);
+    try std.testing.expectEqual(color.Theme.warm, config.theme_color);
+    try std.testing.expectEqual(formatter.FormatterCode.rgb, config.color_mode);
 }

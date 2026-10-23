@@ -1,110 +1,29 @@
 const std = @import("std");
 
-pub const Color = enum {
-    White,
-    Black,
-    Red,
-    Green,
-    GreenDark,
-    GreenMedium,
-    GreenBright,
-    GreenOlive,
-    GreenMoss,
-    Blue,
-    Yellow,
-    Cyan,
-    Magenta,
-    Orange,
-    Purple,
-    DeepPurple,
-    Violet,
-    HotPurple,
-    PaleLavender,
-    Gray,
-    GrayDark,
-    GrayLight,
-    Pink,
-    Brown,
-    Aqua,
-    Navy,
-    Teal,
-    NeonPink,
-    NeonGreen,
-    NeonBlue,
-    NeonYellow,
-    NeonOrange,
-    NeonPurple,
-    NeonCyan,
-    NeonRed,
-    Lavender,
-    Lime,
-    Coral,
-    Gold,
-};
+const kit_color = @import("terminal_kit").color;
 
-const ColorMap = [_][3]u8{
-    .{ 255, 255, 255 }, // White
-    .{ 0, 0, 0 }, // Black
-    .{ 255, 0, 0 }, // Red
-    .{ 0, 255, 0 }, // Green
-    .{ 0, 128, 0 }, // GreenDark
-    .{ 0, 200, 0 }, // GreenMedium
-    .{ 128, 255, 128 }, // GreenBright
-    .{ 85, 107, 47 }, // GreenOlive (oscuro, terroso)
-    .{ 120, 160, 60 }, // GreenMoss (apagado, natural)
-    .{ 0, 0, 255 }, // Blue
-    .{ 255, 255, 0 }, // Yellow
-    .{ 0, 255, 255 }, // Cyan
-    .{ 255, 0, 255 }, // Magenta
-    .{ 255, 128, 0 }, // Orange
-    .{ 128, 0, 128 }, // Purple
-    .{ 48, 0, 72 }, // DeepPurple (muy oscuro, casi negro)
-    .{ 138, 43, 226 }, // Violet (violet blue)
-    .{ 255, 0, 255 }, // HotPurple (similar a magenta intenso)
-    .{ 245, 240, 255 }, // PaleLavender (casi blanco con tinte violeta)
-    .{ 128, 128, 128 }, // Gray
-    .{ 64, 64, 64 }, // GrayDark
-    .{ 192, 192, 192 }, // GrayLight
-    .{ 255, 192, 203 }, // Pink
-    .{ 165, 42, 42 }, // Brown
-    .{ 127, 255, 212 }, // Aqua
-    .{ 0, 0, 128 }, // Navy
-    .{ 0, 128, 128 }, // Teal
-    .{ 255, 0, 144 }, // NeonPink
-    .{ 57, 255, 20 }, // NeonGreen
-    .{ 0, 191, 255 }, // NeonBlue
-    .{ 207, 255, 4 }, // NeonYellow
-    .{ 255, 95, 31 }, // NeonOrange
-    .{ 191, 0, 255 }, // NeonPurple
-    .{ 0, 255, 255 }, // NeonCyan
-    .{ 255, 16, 83 }, // NeonRed
-    .{ 230, 230, 250 }, // Lavender
-    .{ 0, 255, 0 }, // Lime
-    .{ 255, 127, 80 }, // Coral
-    .{ 255, 215, 0 }, // Gold
-};
-
-pub fn rgbOf(c: Color) [3]u8 {
-    return ColorMap[@intFromEnum(c)];
-}
-
+/// Defines the available color palettes for matrix rendering.
 pub const Theme = enum {
-    Ash,
-    Warm,
-    Doom,
-    Blood,
-    Cool,
-    Viridis,
-    Plasma,
-    HellBloom,
-    Oblivion,
-    Singularity,
-    Neon,
-    VoidFireX,
-    VoidFireY,
-    //Rainbow,
+    ash,
+    warm,
+    doom,
+    blood,
+    cool,
+    viridis,
+    plasma,
+    hell_bloom,
+    oblivion,
+    singularity,
+    neon,
+    void_fire_x,
+    void_fire_y,
+    //rainbow,
 };
 
+/// Describes a color palette using RGB colors and relative weights.
+///
+/// Weights determine how much of the generated intensity range is
+/// allocated to each color. They are normalized during palette generation.
 pub const ThemeMeta = struct {
     colors: []const WeightedColor,
 };
@@ -133,157 +52,180 @@ const ThemeMap = [_]ThemeMeta{
 
 pub const GRAY_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.GrayDark), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.Gray), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.GrayLight), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray_dark), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gray_light), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.05 },
     },
 };
 
 pub const ORANGE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.05 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.45 },
-        .{ .rgb = rgbOf(Color.Yellow), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.45 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.yellow), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.1 },
     },
 };
 
 pub const ORANGE_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.Brown), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Gold), .weight = 0.23 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.brown), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.gold), .weight = 0.23 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const RED_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Brown), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.Red), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Coral), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.brown), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.red), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.coral), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const BLUE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.05 },
-        .{ .rgb = rgbOf(Color.Navy), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.Cyan), .weight = 0.45 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.navy), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.cyan), .weight = 0.45 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const GREEN_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.GreenDark), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenMedium), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenBright), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.10 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_dark), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_medium), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_bright), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.10 },
     },
 };
 
 pub const GREEN_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.GreenDark), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenMedium), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.GreenBright), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_dark), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_medium), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green_bright), .weight = 0.2 },
     },
 };
 
 pub const PINK_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.10 },
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.22 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.35 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.16 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.10 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.22 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.35 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.16 },
     },
 };
 
 pub const PURPLE_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.08 },
-        .{ .rgb = rgbOf(Color.DeepPurple), .weight = 0.22 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Violet), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.PaleLavender), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.08 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.deep_purple), .weight = 0.22 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.violet), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.pale_lavender), .weight = 0.05 },
     },
 };
 
 pub const PURPLE_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.DeepPurple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.NeonPurple), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.HotPurple), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.deep_purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_purple), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.hot_purple), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const VOID_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Navy), .weight = 0.30 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.Lavender), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.05 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.navy), .weight = 0.30 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.lavender), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.05 },
     },
 };
 
 pub const VOID_2_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.12 },
-        .{ .rgb = rgbOf(Color.NeonBlue), .weight = 0.28 },
-        .{ .rgb = rgbOf(Color.NeonPurple), .weight = 0.25 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.20 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.12 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_blue), .weight = 0.28 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_purple), .weight = 0.25 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.20 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.15 },
     },
 };
 
 pub const NEON_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Black), .weight = 0.1 },
-        .{ .rgb = rgbOf(Color.NeonBlue), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.NeonPink), .weight = 0.3 },
-        .{ .rgb = rgbOf(Color.NeonOrange), .weight = 0.2 },
-        .{ .rgb = rgbOf(Color.White), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.black), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_blue), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_pink), .weight = 0.3 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.neon_orange), .weight = 0.2 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.white), .weight = 0.1 },
     },
 };
 
 pub const RAINBOW_1_THEME = ThemeMeta{
     .colors = &[_]WeightedColor{
-        .{ .rgb = rgbOf(Color.Red), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Orange), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Yellow), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Green), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Cyan), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Blue), .weight = 0.15 },
-        .{ .rgb = rgbOf(Color.Purple), .weight = 0.1 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.red), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.orange), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.yellow), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.green), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.cyan), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.blue), .weight = 0.15 },
+        .{ .rgb = kit_color.rgb_of(kit_color.Color.purple), .weight = 0.1 },
     },
 };
 
-pub fn metaOf(m: Theme) ThemeMeta {
+pub fn meta_of(m: Theme) ThemeMeta {
     return ThemeMap[@intFromEnum(m)];
 }
 
+/// Generates and owns a color palette for a selected theme.
+///
+/// The palette contains `intensity + 1` RGB entries, with index `0`
+/// reserved. The allocated palette is owned by this manager and is
+/// released by calling `free`.
 pub const ColorManager = struct {
-    allocator: *std.mem.Allocator,
+    /// Allocator used to allocate and release the palette.
+    allocator: std.mem.Allocator,
 
+    /// Generated RGB colors indexed by palette intensity.
     table: [][3]u8,
 
-    pub fn init(allocator: *std.mem.Allocator, intensity: usize, theme: Theme) !@This() {
-        const colors = metaOf(theme).colors;
+    /// Creates a color manager with a palette generated from `theme`.
+    ///
+    /// The resulting palette contains `intensity + 1` entries. Palette
+    /// generation interpolates between the theme's weighted RGB colors.
+    ///
+    /// The caller must call `free` to release the allocated palette.
+    ///
+    /// Returns an allocation error if memory allocation fails.
+    pub fn init(
+        allocator: std.mem.Allocator,
+        intensity: usize,
+        theme: Theme,
+    ) !@This() {
+        const colors = meta_of(theme).colors;
 
-        const table = try generate_palette(allocator, intensity, colors);
+        const table = try generate_palette(
+            allocator,
+            intensity,
+            colors,
+        );
 
         return ColorManager{
             .allocator = allocator,
@@ -291,6 +233,19 @@ pub const ColorManager = struct {
         };
     }
 
+    /// Releases the memory allocated for the palette.
+    ///
+    /// The manager must not be used after this call. Call this method
+    /// only once for each successfully initialized manager.
+    pub fn free(self: *@This()) void {
+        self.allocator.free(self.table);
+        self.table = undefined;
+    }
+
+    /// Returns the RGB color at palette index `i`, if available.
+    ///
+    /// Index `0` is reserved and always returns `null`. Indices greater
+    /// than or equal to the palette length also return `null`.
     pub fn find(self: @This(), i: usize) ?[3]u8 {
         if (i >= self.table.len or i == 0) {
             return null;
@@ -298,12 +253,16 @@ pub const ColorManager = struct {
         return self.table[i];
     }
 
-    fn generate_palette(
-        allocator: *std.mem.Allocator,
+    inline fn generate_palette(
+        allocator: std.mem.Allocator,
         intensity: usize,
         theme: []const WeightedColor,
     ) ![][3]u8 {
         var palette = try allocator.alloc([3]u8, intensity + 1);
+        errdefer allocator.free(palette);
+
+        @memset(palette, .{ 0, 0, 0 });
+
         if (theme.len == 0 or intensity == 0) {
             return palette;
         }
@@ -343,7 +302,7 @@ pub const ColorManager = struct {
         return palette;
     }
 
-    fn generate_accum(allocator: *std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
+    inline fn generate_accum(allocator: std.mem.Allocator, theme: []const WeightedColor) ![]f32 {
         var total: f32 = 0;
         for (theme) |c| {
             total += c.weight;
@@ -360,7 +319,7 @@ pub const ColorManager = struct {
         return accum;
     }
 
-    fn index_of_accum(accum: []f32, t: f32) usize {
+    inline fn index_of_accum(accum: []f32, t: f32) usize {
         var idx: usize = 0;
         while (idx < accum.len and t > accum[idx]) {
             idx += 1;
@@ -368,7 +327,7 @@ pub const ColorManager = struct {
         return idx;
     }
 
-    fn lerp_rgb(a: [3]u8, b: [3]u8, t: f32) [3]u8 {
+    inline fn lerp_rgb(a: [3]u8, b: [3]u8, t: f32) [3]u8 {
         return .{
             lerp(a[0], b[0], t),
             lerp(a[1], b[1], t),
@@ -376,16 +335,68 @@ pub const ColorManager = struct {
         };
     }
 
-    fn lerp(a: u8, b: u8, t: f32) u8 {
+    inline fn lerp(a: u8, b: u8, t: f32) u8 {
         const fa: f32 = @floatFromInt(a);
         const fb: f32 = @floatFromInt(b);
 
         const result = std.math.clamp(fa + t * (fb - fa), 0, 255);
         return @intFromFloat(result);
     }
-
-    pub fn free(self: *@This()) void {
-        self.allocator.free(self.table);
-        self.table = null;
-    }
 };
+
+test "ColorManager generates a palette with the requested length" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(9, manager.table.len);
+}
+
+test "ColorManager reserves index zero" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(0) == null);
+}
+
+test "ColorManager returns null for out-of-range indices" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(9) == null);
+    try std.testing.expect(manager.find(100) == null);
+}
+
+test "ColorManager generates the expected grayscale endpoints" {
+    var manager = try ColorManager.init(std.testing.allocator, 8, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(
+        [3]u8{ 0, 0, 0 },
+        manager.table[1],
+    );
+
+    try std.testing.expectEqual(
+        [3]u8{ 255, 255, 255 },
+        manager.table[8],
+    );
+}
+
+test "ColorManager intensity one returns the final theme color" {
+    var manager = try ColorManager.init(std.testing.allocator, 1, .ash);
+    defer manager.free();
+
+    try std.testing.expect(manager.find(0) == null);
+
+    try std.testing.expectEqual(
+        [3]u8{ 255, 255, 255 },
+        manager.find(1).?,
+    );
+}
+
+test "ColorManager supports zero intensity" {
+    var manager = try ColorManager.init(std.testing.allocator, 0, .ash);
+    defer manager.free();
+
+    try std.testing.expectEqual(1, manager.table.len);
+    try std.testing.expect(manager.find(0) == null);
+}

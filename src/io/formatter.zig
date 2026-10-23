@@ -1,5 +1,4 @@
 const std = @import("std");
-const color = @import("../domain/color.zig");
 
 pub const FormatterCode = enum {
     ANSI,
