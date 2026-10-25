@@ -1,13 +1,13 @@
 const std = @import("std");
 
+const formatter = @import("terminal_kit").formatter;
+
 const Printer = @import("terminal_kit").printer.Printer;
 
 const LinearMatrix = @import("../domain/matrix.zig").LinearMatrix;
 
 const symbol = @import("../domain/symbol.zig");
 const color = @import("../domain/color.zig");
-
-const formatter = @import("formatter.zig");
 
 /// Formats and prints a linear matrix using configurable symbols and colors.
 pub const LinearMatrixPrinter = struct {

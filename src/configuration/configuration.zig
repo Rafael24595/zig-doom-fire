@@ -10,6 +10,7 @@ const Printer = terminal_kit.printer.Printer;
 const Flag = terminal_kit.configuration.Flag;
 const kit_conf = terminal_kit.configuration;
 
+const kit_formatter = terminal_kit.formatter;
 const kit_color = terminal_kit.color;
 
 const matrix = @import("../domain/matrix.zig");
@@ -132,18 +133,20 @@ pub const Configuration = struct {
     color_mode: formatter.FormatterCode = .rgb,
 
     /// Formatter configuration for the matrix output.
-    formatter_matrix: formatter.FormatterMatrixUnion = formatter.FormatterMatrixUnion{ .unfo = .{} },
+    formatter_matrix: kit_formatter.FormatterMatrixUnion = formatter.matrix_union_of(.rgb),
     /// Formatter configuration for individual cells.
-    formatter_cell: formatter.FormatterCellUnion = formatter.FormatterCellUnion{ .unfo = .{} },
+    formatter_cell: kit_formatter.FormatterCellUnion = formatter.cell_union_of(.rgb),
 
     /// Parses command-line arguments into a configuration.
     ///
     /// Uses `allocator` for temporary allocations and `printer` for
     /// formatting or reporting command-line information.
     /// Exits the process for help, version, or unknown arguments.
-    pub fn init(allocator: std.mem.Allocator, printer: *Printer, args: [][:0]u8) !@This() {
-        defer printer.reset();
-
+    pub fn init(
+        allocator: std.mem.Allocator,
+        printer: *Printer,
+        args: [][:0]u8,
+    ) !kit_conf.InitResult(Configuration) {
         var config = Configuration{};
 
         var i: usize = 1;
@@ -152,12 +155,12 @@ pub const Configuration = struct {
 
             if (std.mem.eql(u8, arg, FLAG_HELP.flag_short) or std.mem.eql(u8, arg, FLAG_HELP.flag_long.?)) {
                 try print_help(allocator, printer, config);
-                std.process.exit(0);
+                return .inf;
             }
 
             if (std.mem.eql(u8, arg, FLAG_VERSION.flag_short) or std.mem.eql(u8, arg, FLAG_VERSION.flag_long.?)) {
-                try printer.printf("{any}: {s}\n", .{ build.name, build.version });
-                std.process.exit(0);
+                try printer.printf("\n{any}: {s}\n", .{ build.name, build.version });
+                return .inf;
             }
 
             if (std.mem.eql(u8, arg, FLAG_DEBUG.flag_short)) {
@@ -202,12 +205,15 @@ pub const Configuration = struct {
 
             if (std.mem.eql(u8, arg, FLAG_COLOR_MODE.flag_short)) {
                 config.color_mode = try kit_conf.parse_enum(formatter.FormatterCode, printer, args, i, FLAG_COLOR_MODE);
+                config.formatter_matrix = formatter.matrix_union_of(config.color_mode);
+                config.formatter_cell = formatter.cell_union_of(config.color_mode);
                 i += 1;
                 continue;
             }
 
-            try printer.printf("Unknown argument: {s}\n", .{arg});
-            std.process.exit(1);
+            return .{
+                .err = try printer.format("\nUnknown argument: {s}\n", .{arg}),
+            };
         }
 
         const timestamp = std.time.milliTimestamp();
@@ -218,24 +224,7 @@ pub const Configuration = struct {
             config.seed = @intCast(timestamp);
         }
 
-        init_formatters(&config);
-
-        return config;
-    }
-
-    fn init_formatters(config: *Configuration) void {
-        switch (config.color_mode) {
-            formatter.FormatterCode.ANSI => {
-                config.formatter_cell = formatter.FormatterCellUnion{ .ansi = .{} };
-            },
-            formatter.FormatterCode.RGB => {
-                config.formatter_cell = formatter.FormatterCellUnion{ .rgb = .{} };
-            },
-        }
-
-        config.formatter_matrix = formatter.FormatterMatrixUnion{ .unfo = .{} };
-
-        return;
+        return .{ .run = config };
     }
 
     pub fn print_help(allocator: std.mem.Allocator, printer: *Printer, config: Configuration) !void {
@@ -323,9 +312,12 @@ pub const Configuration = struct {
 /// Allocates the argument list using `allocator` and releases it before
 /// returning. Propagates errors from argument allocation and parsing.
 pub fn from_args(allocator: std.mem.Allocator, printer: *Printer) !Configuration {
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-    return Configuration.init(allocator, printer, args);
+    return kit_conf.from_args(
+        Configuration,
+        allocator,
+        printer,
+        Configuration.init,
+    );
 }
 
 test "Configuration uses the expected default values" {
