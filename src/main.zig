@@ -1,52 +1,47 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const AtomicOrder = std.builtin.AtomicOrder;
+const terminal_kit = @import("terminal_kit");
 
-const build = @import("build.zig.zon");
+const signals = terminal_kit.signals;
+const console = terminal_kit.console;
+const Printer = terminal_kit.printer.Printer;
+
+const runtime = terminal_kit.runtime_state;
+
+const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
+const MiniLCG = terminal_kit.mini_lcg.MiniLCG;
 
 const configuration = @import("configuration/configuration.zig");
 
-const utils = @import("commons/utils.zig");
-const AllocatorTracer = @import("commons/allocator.zig").AllocatorTracer;
-const MiniLCG = @import("commons/mini_lcg.zig").MiniLCG;
+const debug = @import("app/debug.zig");
 
-const console = @import("io/console.zig");
-const Printer = @import("io/printer.zig").Printer;
+const FireState = @import("app/fire_state.zig").FireState;
+const RenderContext = @import("app/render_context.zig").RenderContext;
+
 const MatrixPrinter = @import("io/matrix_printer.zig").LinearMatrixPrinter;
 
 const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
 
-const wind_default = 0;
-
-var start_timestamp = std.atomic.Value(i64).init(0);
-
-var pause = std.atomic.Value(u8).init(0);
-var pause_timestamp = std.atomic.Value(i64).init(0);
-
-var speed_ms = std.atomic.Value(u64).init(0);
-
-var wind = std.atomic.Value(isize).init(wind_default);
-var oxygen = std.atomic.Value(isize).init(0);
-
-var exit = std.atomic.Value(u8).init(0);
-var power = std.atomic.Value(u8).init(0);
-
-var mutex: std.Thread.Mutex = .{};
-var cond: std.Thread.Condition = .{};
-
+/// Initializes application resources, configures the terminal, and starts
+/// the rendering loop.
 pub fn main() !void {
-    var basePersistentAllocator = std.heap.page_allocator;
-    var persistentAllocator = AllocatorTracer.init(&basePersistentAllocator);
+    var persistent = AllocatorTracer.init(
+        std.heap.page_allocator,
+    );
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
 
-    var baseScratchAllocator = gpa.allocator();
-    var scratchAllocator = AllocatorTracer.init(&baseScratchAllocator);
+    var scratch = AllocatorTracer.init(
+        gpa.allocator(),
+    );
 
-    var arena = std.heap.ArenaAllocator.init(scratchAllocator.allocator());
+    var arena = std.heap.ArenaAllocator.init(
+        scratch.allocator(),
+    );
+
     defer arena.deinit();
 
     var printer = Printer{
@@ -56,32 +51,53 @@ pub fn main() !void {
 
     defer printer.reset();
 
-    const config = try configuration.fromArgs(
-        persistentAllocator.allocator(),
+    const config = try configuration.from_args(
+        persistent.allocator(),
         &printer,
     );
 
-    start_timestamp.store(config.start_ms, AtomicOrder.release);
-    speed_ms.store(config.milliseconds, AtomicOrder.release);
+    var state = runtime.RuntimeState{};
 
-    try console.enableANSI();
-    try console.enableUTF8();
-    try console.enableRawMode();
+    state.start_timestamp.store(config.start_ms, .release);
+    state.speed_ms.store(config.milliseconds, .release);
 
-    defer console.disableRawMode();
+    var fire_state = FireState{};
+
+    try console.enable_ansi();
+    try console.enable_utf8();
+
+    try console.enable_raw_mode();
+    defer console.disable_raw_mode();
 
     try run(
-        &persistentAllocator,
-        &scratchAllocator,
+        &state,
+        &fire_state,
+        &persistent,
+        &scratch,
         &config,
         &printer,
     );
 }
 
-pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTracer, config: *const configuration.Configuration, printer: *Printer) !void {
-    try defineSignalHandlers();
+/// Runs the application session, coordinating input handling and rendering
+/// until termination is requested.
+pub fn run(
+    state: *runtime.RuntimeState,
+    fire_state: *FireState,
+    persistent: *AllocatorTracer,
+    scratch: *AllocatorTracer,
+    config: *const configuration.Configuration,
+    printer: *Printer,
+) !void {
+    try signals.install(state, runtime.on_interrupt);
 
-    var persistent = persistentAllocator.allocator();
+    defer {
+        signals.uninstall() catch |err| {
+            std.debug.print("Failed to uninstall signals: {}\n", .{err});
+        };
+    }
+
+    const allocator = persistent.allocator();
 
     var lcg = MiniLCG.init(config.seed);
 
@@ -95,275 +111,141 @@ pub fn run(persistentAllocator: *AllocatorTracer, scratchAllocator: *AllocatorTr
 
     var input_thread = try std.Thread.spawn(
         .{},
-        runInputLoop,
-        .{},
+        run_input_loop,
+        .{ state, fire_state },
     );
 
     defer input_thread.join();
 
-    while (exit.load(AtomicOrder.acquire) == 0) {
-        const winsize = try console.winSize();
+    while (!runtime.should_exit(state)) {
+        _ = state.consume_reload();
 
-        const space = calculatePadding(config);
-
-        const area = winsize.cols * winsize.rows;
-
-        const cols = winsize.cols;
-        const rows = winsize.rows - space;
-
-        const intensity: usize = calculateIntensity(config, rows);
-
-        const color_manager = try color.ColorManager.init(
-            &persistent,
-            intensity,
-            config.theme_color,
-        );
-
-        var mtrx_printer = try MatrixPrinter.init(
-            &persistent,
+        try run_render_cycle(
+            allocator,
+            persistent,
+            scratch,
+            state,
+            fire_state,
+            config,
             printer,
-            color_manager,
-            config.formatter_matrix,
-            config.formatter_cell,
-            config.theme_symbol,
-        );
-
-        defer mtrx_printer.reset();
-
-        var mtrx = matrix.LinearMatrix.init(
-            &persistent,
             &lcg,
         );
+    }
+}
 
-        try mtrx.build(
-            cols,
-            rows,
-            intensity,
-        );
+inline fn run_render_cycle(
+    allocator: std.mem.Allocator,
+    persistent: *AllocatorTracer,
+    scratch: *AllocatorTracer,
+    state: *runtime.RuntimeState,
+    fire_state: *FireState,
+    config: *const configuration.Configuration,
+    printer: *Printer,
+    lcg: *MiniLCG,
+) !void {
+    const winsize = try console.winsize();
 
-        defer mtrx.free();
+    var context: RenderContext = undefined;
 
-        try printer.print(console.CLEAN_CONSOLE);
+    try context.init(
+        allocator,
+        winsize,
+        config,
+        printer,
+        lcg,
+    );
+    defer context.deinit();
 
-        while (exit.load(AtomicOrder.acquire) == 0) {
-            if (power.load(AtomicOrder.acquire) == 1) {
-                _ = power.fetchXor(1, AtomicOrder.acq_rel);
-                mtrx.switch_fire();
-            }
+    try printer.print(console.CLEAN_CONSOLE);
 
-            try printer.print(console.RESET_CURSOR);
-
-            if (config.debug) {
-                try print_debug(
-                    persistentAllocator,
-                    scratchAllocator,
-                    config,
-                    printer,
-                    &mtrx,
-                );
-            }
-
-            try mtrx_printer.print(&mtrx);
-
-            if (pause.load(AtomicOrder.acquire) == 0) {
-                try mtrx.next(wind.raw, oxygen.raw);
-            }
-
-            if (config.controls) {
-                try print_controls(printer);
-            }
-
-            mutex.lock();
-            _ = cond.timedWait(&mutex, speed_ms.raw * std.time.ns_per_ms) catch |err| switch (err) {
-                error.Timeout => true,
-                else => return err,
-            };
-            mutex.unlock();
-
-            printer.reset();
-
-            const newWinsize = try console.winSize();
-            if (area != newWinsize.cols * newWinsize.rows) {
-                break;
-            }
+    while (!runtime.should_exit(state) and !runtime.should_reload(state)) {
+        if (fire_state.consume_power()) {
+            context.matrix.switch_fire();
         }
+
+        try printer.print(console.RESET_CURSOR);
+
+        if (config.debug) {
+            try debug.print_debug(
+                state,
+                fire_state,
+                persistent,
+                scratch,
+                config,
+                printer,
+                &context,
+            );
+        }
+
+        try context.matrix_printer.print(&context.matrix);
+
+        if (!state.pause.load(.acquire)) {
+            try context.matrix.next(
+                fire_state.wind.load(.acquire),
+                fire_state.oxygen.load(.acquire),
+            );
+        }
+
+        if (config.controls) {
+            try debug.print_controls(printer);
+        }
+
+        const speed = state.speed_ms.load(.acquire);
+        try state.wait_for_frame(speed * std.time.ns_per_ms);
+
+        printer.reset();
+
+        if (!winsize.eql(try console.winsize())) {
+            state.request_reload();
+        }
+
+        context.counter.frame_increment();
     }
 }
 
-pub fn calculatePadding(config: *const configuration.Configuration) usize {
-    var space: usize = 0;
-    if (config.debug) {
-        space += 4;
-    }
-
-    if (config.controls) {
-        space += 1;
-    }
-
-    return space;
-}
-
-pub fn calculateIntensity(config: *const configuration.Configuration, rows: usize) usize {
-    if (config.intensity > 0) {
-        return config.intensity;
-    }
-
-    const f_rows: f32 = @floatFromInt(rows);
-    return @intFromFloat(f_rows * config.intensity_per);
-}
-
-fn runInputLoop() !void {
+fn run_input_loop(
+    state: *runtime.RuntimeState,
+    fire_state: *FireState,
+) !void {
     const stdin = std.fs.File.stdin();
 
-    while (exit.load(AtomicOrder.acquire) == 0) {
+    while (!runtime.should_exit(state)) {
         var buf: [1]u8 = undefined;
-        _ = try stdin.read(&buf);
+
+        const count = try stdin.read(&buf);
+        if (count == 0) {
+            continue;
+        }
 
         switch (buf[0]) {
             'p', 'P', console.SPACE => {
-                const now = std.time.milliTimestamp();
-                if (pause.load(AtomicOrder.acquire) == 0) {
-                    _ = pause_timestamp.store(now, AtomicOrder.release);
-                } else {
-                    const diff = now - pause_timestamp.raw;
-                    _ = start_timestamp.store(diff + start_timestamp.raw, AtomicOrder.release);
-                }
-
-                _ = pause.fetchXor(1, AtomicOrder.acq_rel);
+                state.toggle_pause();
             },
             's', 'S' => {
-                _ = power.fetchXor(1, AtomicOrder.acq_rel);
+                fire_state.request_power();
             },
             'w', 'W' => {
-                const oxygen_fix = @min(5, oxygen.raw + 1);
-                _ = oxygen.store(oxygen_fix, AtomicOrder.release);
+                fire_state.mod_oxygen(1);
             },
             'x', 'X' => {
-                const oxygen_fix = @max(-5, oxygen.raw - 1);
-                _ = oxygen.store(oxygen_fix, AtomicOrder.release);
+                fire_state.mod_oxygen(-1);
             },
             'a', 'A' => {
-                const wind_fix = @min(5, wind.raw + 1);
-                _ = wind.store(wind_fix, AtomicOrder.release);
+                fire_state.mod_wind(1);
             },
             'd', 'D' => {
-                const wind_fix = @max(-5, wind.raw - 1);
-                _ = wind.store(wind_fix, AtomicOrder.release);
+                fire_state.mod_wind(-1);
             },
             '+' => {
-                const min = @min(1000 * 3, speed_ms.raw + 10);
-                _ = speed_ms.store(min, AtomicOrder.release);
-                _ = cond.signal();
+                state.mod_speed(10);
             },
             '-' => {
-                const max = speed_ms.raw -| 10;
-                _ = speed_ms.store(max, AtomicOrder.release);
-                _ = cond.signal();
+                state.mod_speed(-10);
             },
             'q', 'Q', console.CTRL_C => {
-                _ = exit.fetchXor(1, AtomicOrder.acq_rel);
-                _ = cond.signal();
+                state.request_exit();
             },
             else => {},
         }
     }
-}
-
-pub fn print_debug(
-    persistentAllocator: *AllocatorTracer,
-    scratchAllocator: *AllocatorTracer,
-    config: *const configuration.Configuration,
-    printer: *Printer,
-    mtrx: *matrix.LinearMatrix,
-) !void {
-    var scratch = scratchAllocator.allocator();
-
-    const cols = mtrx.cols_len();
-    const rows = mtrx.rows_len();
-    const fixedArea = rows * cols;
-
-    var end_ms = std.time.milliTimestamp();
-    if (pause.load(AtomicOrder.acquire) == 1) {
-        end_ms = pause_timestamp.raw;
-    }
-
-    const time = try utils.millisecondsToTime(scratch, end_ms - start_timestamp.raw, null);
-    defer scratch.free(time);
-
-    var paused = false;
-    if (pause.load(AtomicOrder.acquire) == 1) {
-        paused = true;
-    }
-
-    var power_status: []const u8 = "off";
-    if (mtrx.status) {
-        power_status = "on";
-    }
-
-    try printer.printf("{}: {s}\n", .{
-        build.name,
-        build.version,
-    });
-
-    try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} \n", .{
-        persistentAllocator.bytes(),
-        scratchAllocator.bytes(),
-        paused,
-    });
-
-    try printer.printf("Seed: {d} | Matrix: {d} | Columns: {d} | Rows: {d} | Intensity: {d} \n", .{
-        config.seed,
-        fixedArea,
-        cols,
-        rows,
-        mtrx.intensity_len(),
-    });
-
-    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{ speed_ms.raw, time, @tagName(config.theme_color), @tagName(config.theme_symbol), power_status, wind.raw, oxygen.raw });
-}
-
-pub fn print_controls(
-    printer: *Printer,
-) !void {
-    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc oxygen: {s} | Dec oxygen: {s} | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
-        "p, space",
-        "s",
-        "w",
-        "x",
-        "a",
-        "d",
-        "+",
-        "-",
-        "q, ctrl+c",
-    });
-}
-
-pub fn defineSignalHandlers() !void {
-    if (builtin.os.tag == .windows) {
-        if (std.os.windows.kernel32.SetConsoleCtrlHandler(winCtrlHandler, 1) == 0) {
-            return error.FailedToSetCtrlHandler;
-        }
-        return;
-    }
-
-    const action = std.posix.Sigaction{
-        .handler = .{ .handler = unixSigintHandler },
-        .mask = undefined,
-        .flags = 0,
-    };
-
-    _ = std.posix.sigaction(std.posix.SIG.INT, &action, null);
-}
-
-fn winCtrlHandler(ctrl_type: std.os.windows.DWORD) callconv(.c) std.os.windows.BOOL {
-    _ = ctrl_type;
-    _ = exit.fetchXor(1, AtomicOrder.acq_rel);
-    _ = cond.signal();
-    return 1;
-}
-
-fn unixSigintHandler(sig_num: i32) callconv(.c) void {
-    _ = sig_num;
-    _ = exit.fetchXor(1, AtomicOrder.acq_rel);
-    _ = cond.signal();
 }

@@ -1,183 +1,208 @@
 # Zig Doom Fire
 
-A terminal-based Doom Fire simulation implemented in Zig ⚡.
-Supports configurable matrix size, fire intensity, wind effect, oxygen level and color/symbol themes.
+A configurable, terminal-based Doom Fire simulation written in Zig. ⚡
 
-![doom fire](.img/fire.gif)
+Customize the fire with adjustable intensity, wind, oxygen levels, color themes, symbol sets, and rendering speed.
 
-```Text
-Warning: This program has been tested on modern terminals (Terminal Windows 1.23.13503.0). Older terminals may exhibit slow rendering or display issues when using RGB color mode. For better performance, consider using ANSI mode.
-```
+![Doom Fire](.img/fire.gif)
 
----
+> **Terminal compatibility:** The project has been tested with Windows Terminal `1.23.13503.0`. Rendering performance and color display may vary across terminal emulators. If RGB rendering is slow or causes display issues, try `ANSI` mode.
 
 ## Features
 
-- Configurable life simulation with adjustable:
-  - Matrix size (dynamic to terminal)
-  - Fire intensity
-  - Wind effect
-  - Oxygen level
-  - Color themes
-  - Symbol themes
-- Color inheritance mode allows new cells to inherit or blend colors from parent cells
-- Debug mode displaying internal state such as intensity, wind, oxygen, themes, memory usage, and seed
-- Cross-platform signal handling for clean exit (Windows / Unix/Linux)
+- **Configurable fire:** Adjust fire intensity, wind, oxygen levels, frame delay, and random seed.
+- **Color customization:** Choose from multiple palettes, including classic fire, cool tones, grayscale, supernatural colors, and neon effects.
+- **Symbol themes:** Render the fire using ASCII characters or Unicode symbols.
+- **Dynamic terminal sizing:** Adapt the matrix to terminal dimensions and handle window resizing while running.
+- **Multiple color modes:** Use RGB or ANSI color output.
+- **Debug mode:** Inspect runtime parameters, matrix dimensions, random seed, and memory usage.
+- **Interactive controls:** Pause the simulation, toggle the fire, adjust wind and oxygen, change rendering speed, or exit cleanly.
+- **Cross-platform shutdown:** Handle keyboard interrupts and restore terminal state during normal shutdown on supported platforms.
 
----
+## Requirements
 
-## Build & Run
+- Zig compiler `0.15.1` (tested version).
+- A terminal emulator with ANSI escape-sequence support.
 
-### Requirements
-- Zig compiler (Tested on 0.15.1)
+## Build
 
-### Build
-```sh
-  zig build
-```
-
-### Run
-```sh
-  zig-out/bin/zig-doom-fire [options]
-```
-
----
-
-## Dynamic Matrix Size
-
-The simulation adapts automatically to the size of your terminal window.  
-
-- Number of rows and columns is detected at runtime.
-- Resizing the terminal while running adjusts the matrix dimensions dynamically.  
-- Ensures the simulation always fills the visible area.
-
-## Command Line Options
-
-| Option | Description | Default | Values |
-|--------|-------------|---------|--------|
-| `-h`, `--help` | Show the help message | — | — |
-| `-v`, `--version` | Show project's version | — | — |
-| `-d` | Enable debug mode | Off | — |
-| `-hc` | Show the controls map | Off | — |
-| `-s` | Random seed | Current timestamp in ms | Any unsigned integer |
-| `-ms` | Frame delay in milliseconds | 50 | Any unsigned integer |
-| `-i` | Intensity | 0.60 × matrix height | Any unsigned integer |
-| `-tc` | Color theme | Warm | Warm, Cool, GREEN_THEME, Gray, Neon |
-| `-ts` | Symbol theme | Classic | Classic, Star, Arrow, Plus, Triangle, Spark, Block |
-| `-cm` | Color mode | RGB | RGB, ANSI |
-
-## Color Themes
-
-Several themes are included for different visual effects.
-
-| Palette | Description | Example Colors | Notes |
-| ------- | ----------- | -------------- | ----- |
-| Ash | Gray / ashy fire | Black, GrayDark, Gray, GrayLight, White | Smoke, ashes, subdued flames |
-| Warm | Classic warm fire | Black, Orange, Yellow, White | Classic fire tones |
-| Doom | Classic Doom-style intense fire | Black, Brown, Orange, Gold, White | More intense and deep than Warm |
-| Blood | Red infernal fire | Black, Brown, Red, Coral, White | Perfect for burning blood or demonic effects |
-| Cool | Blue / cold fire | Black, Navy, Cyan, White | Icy or water-like flames  |
-| Viridis | Green supernatural fire | Black, GreenDark, GreenMedium, GreenBright, Lavender | Stable green with lavender highlight for volume |
-| Plasma | Green intense / plasma | Black, GreenDark, GreenMedium, GreenBright | Violent green without highlights, ideal for contained energy |
-| HellBloom | Pink infernal fire | Black, Purple, NeonPink, White | Aggressive pink, dramatic, Doom 64 style |
-| Oblivion | Purple ethereal fire | Black, DeepPurple, Purple, Violet, Lavender, PaleLavender | Smooth gradient purple → white, elegant and magical |
-| Singularity | Purple plasma / energy | Black, DeepPurple, NeonPurple, HotPurple, White | More aggressive, bright tip for energy effects |
-| Neon | Neon multicolor | Black, NeonBlue, NeonPink, NeonOrange, White | Futuristic, luminous fire  |
-| VoidFireX | Dark purple / void | Black, Navy, Purple, Lavender, White | Dark monochrome, conveys emptiness or contained energy |
-| VoidFireY | Neon void | Black, NeonBlue, NeonPurple, NeonPink, White | Intense neon energy, maximum brightness for alien fire |
-
-
-## Symbol Themes & Rendering
-
-- Supports ASCII or Unicode block characters for active cells.
-- Inactive cells are spaces ' '.
-- Active cells can be colored using ANSI escape codes or RGB mode.
-- Example character sets:
-
-| Mode | Active Char | Inactive Char | Notes |
-| ---- | ----------- | -------------- | ----- |
-| Classic | `#` | ` ` | Large ASCII block |
-| Star | `*` | ` ` | Medium ASCII |
-| Arrow | `^` | ` ` | Tip of a flame / directional |
-| Plus | `+` | ` ` | Small cross / subtle |
-| Triangle | `▲` | ` ` | Solid flame shape |
-| Spark | `✦`| ` ` | Bright spark / magical |
-| Block | `█` | ` ` | Unicode block, dense |
-
-
----
-
-### Recommended Terminal Setup
-
-For the most immersive experience, using a **black terminal background** is recommended. This ensures the fire effect and color/symbol themes display as intended.
-
----
-
-### Examples
-#### Run with default settings:
+Build the project using Zig:
 
 ```sh
-  zig-out/bin/zig-doom-fire
+zig build
 ```
 
-#### Run in debug mode:
+For an optimized release build, use `ReleaseFast`:
+
 ```sh
-  zig-out/bin/zig-doom-fire -d
+zig build -Doptimize=ReleaseFast
 ```
 
-#### Set custom seed:
+The optimized build prioritizes runtime performance over debug-friendly behavior.
+
+## Run
+
+Launch the executable:
+
 ```sh
-  zig-out/bin/zig-doom-fire -s 1768304672407
+zig-out/bin/zig-doom-fire
 ```
 
-#### Set custom frame delay:
+Display the available command-line options:
+
 ```sh
-  zig-out/bin/zig-doom-fire -ms 150
+zig-out/bin/zig-doom-fire --help
 ```
 
-#### Set specific color theme:
+## Command-Line Options
+
+| Option | Description | Default |
+|---|---|---|
+| `-h`, `--help` | Display the help message | — |
+| `-v`, `--version` | Display the project version | — |
+| `-d` | Enable debug output | Disabled |
+| `-hc` | Display the interactive controls map | Disabled |
+| `-s` | Set the random seed | Current timestamp in milliseconds |
+| `-ms` | Set the frame delay in milliseconds | `45` ms on Windows; `50` ms on other platforms |
+| `-i` | Set the fire intensity | `0.60 × matrix height` |
+| `-tc` | Set the color theme | `warm` |
+| `-ts` | Set the symbol theme | `classic` |
+| `-cm` | Set the color mode | `rgb` |
+
+### Available Values
+
+**Color theme (`-tc`)**
+
+| Theme | Description |
+|---|---|
+| `ash` | Gray and ashy tones |
+| `warm` | Classic fire colors |
+| `doom` | Intense, deep Doom-inspired fire |
+| `blood` | Dark red and infernal tones |
+| `cool` | Blue and icy tones |
+| `viridis` | Green tones with lavender highlights |
+| `plasma` | Intense green energy |
+| `hellBloom` | Pink and purple infernal flames |
+| `oblivion` | Ethereal purple gradients |
+| `singularity` | Bright purple plasma |
+| `neon` | Multicolored neon tones |
+| `void_fire_x` | Dark purple and navy tones |
+| `void_fire_y` | Bright neon void colors |
+
+**Symbol theme (`-ts`)**
+
+| Theme | Active Character | Description |
+|---|---|---|
+| `classic` | `#` | Large ASCII blocks |
+| `star` | `*` | Star-like particles |
+| `arrow` | `^` | Directional flame tips |
+| `plus` | `+` | Small cross-shaped particles |
+| `triangle` | `▲` | Solid triangular shapes |
+| `apark` | `✦` | Bright decorative sparks |
+| `block` | `█` | Dense Unicode blocks |
+
+**Color mode (`-cm`)**
+
+- `rgb` — RGB color output.
+- `ansi` — ANSI color output, which may perform better on some terminals.
+
+## Examples
+
+Run with the default configuration:
+
 ```sh
-  zig-out/bin/zig-doom-fire -tc Cool
+zig-out/bin/zig-doom-fire
 ```
 
-#### Set specific symbol theme:
+Enable debug output:
+
 ```sh
-  zig-out/bin/zig-doom-fire -ts Star
+zig-out/bin/zig-doom-fire -d
 ```
 
----
+Set a custom random seed:
+
+```sh
+zig-out/bin/zig-doom-fire -s 1768304672407
+```
+
+Change the frame delay:
+
+```sh
+zig-out/bin/zig-doom-fire -ms 150
+```
+
+Set the fire intensity:
+
+```sh
+zig-out/bin/zig-doom-fire -i 30
+```
+
+Select a color theme:
+
+```sh
+zig-out/bin/zig-doom-fire -tc Cool
+```
+
+Use a different symbol theme:
+
+```sh
+zig-out/bin/zig-doom-fire -ts Star
+```
+
+Use ANSI color output:
+
+```sh
+zig-out/bin/zig-doom-fire -cm ANSI
+```
+
+Combine multiple options:
+
+```sh
+zig-out/bin/zig-doom-fire -tc Neon -ts Spark -cm ANSI -ms 75
+```
+
+## Terminal Recommendations
+
+A black terminal background is recommended for the intended fire effect and good contrast across color themes.
+
+RGB rendering may perform differently depending on the terminal emulator. If performance or color display is an issue, try ANSI mode.
+
+Unicode symbol themes may also depend on the terminal's font and character support.
 
 ## Debug Mode
 
-When enabled (-d), the program will print additional runtime information:
-- Project name and version
-- Memory usage (persistent & scratch)
-- Execution parameters: speed, intensity, wind, oxygen, themes
-- Random seed and matrix dimensions
-- Time (Not counting breaks)
+Enable debug output with `-d` to inspect runtime information, including:
 
----
+- Project name and version.
+- Persistent and scratch memory usage.
+- Frame delay, fire intensity, wind, and oxygen levels.
+- Random seed and matrix dimensions.
+- Color and symbol themes.
+- Elapsed execution time, excluding breaks.
+
+Debug output is useful for inspecting the simulation's runtime configuration and troubleshooting unexpected behavior.
 
 ## Interactive Controls
 
-The simulation supports real-time key input. This allows you to interactively pause, reload, or exit the simulation while it is running.
+The simulation accepts keyboard input while running.
 
 | Key | Action |
-| --- | ------ |
-| `p`, `Space` | Toggle pause/resume. When paused, the simulation stops updating the matrix but the display remains visible. Pressing again resumes the simulation. |
-| `s`, | Toggle on/off the fire effect. |
-| `w` | Increases the current oxygen level by 1, up to a maximum of 5. |
-| `x` | Decreases the current oxygen level by 1, up to a minimum of -5. |
-| `a` | Increases the current wind value by 1, up to a maximum of 5. |
-| `d` | Decreases the current wind value by 1, up to a minimum of -5. |
-| `+` | Increases the current sleep time by 10 ms, up to a maximum of 3000 ms (3 seconds). |
-| `-` | Decreases the current sleep time by 10 ms, down to a minimum of 0 ms. |
-| `q`, `CTRL+C` | Exit the simulation cleanly. |
+|---|---|
+| `p`, `Space` | Toggle pause and resume. The current frame remains visible while paused. |
+| `s` | Toggle the fire effect on or off. |
+| `w` | Increase oxygen by `1`, up to `5`. |
+| `x` | Decrease oxygen by `1`, down to `-5`. |
+| `a` | Increase wind by `1`, up to `5`. |
+| `d` | Decrease wind by `1`, down to `-5`. |
+| `+` | Increase the frame delay by `10` ms, up to `3000` ms. |
+| `-` | Decrease the frame delay by `10` ms, down to `0` ms. |
+| `q`, `Ctrl+C` | Request a clean exit. |
 
-### Notes
+Input is processed on a separate thread, allowing the render loop to continue while waiting for key presses. Atomic flags coordinate input and rendering operations.
 
-- Input is handled asynchronously in a separate thread, so the simulation continues rendering frames even while waiting for a keypress.
-- Pause, reload, and exit are implemented using atomic flags, ensuring safe concurrent access between the input thread and the render loop.
-- Works on Windows, Linux with platform-specific raw mode setup to ensure immediate key detection.
+## Shutdown and Signal Handling
 
----
+The application supports clean shutdown through keyboard controls and interrupt handling on supported platforms.
+
+During normal shutdown, the application attempts to restore the terminal state and stop background input processing. Exact behavior may depend on the operating system, terminal emulator, and how the process terminates.
