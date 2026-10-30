@@ -12,17 +12,33 @@ const runtime = terminal_kit.runtime_state;
 const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
 const MiniLCG = terminal_kit.mini_lcg.MiniLCG;
 
+const PanicHandler = terminal_kit.panic_handler.PanicHandler;
+
 const configuration = @import("configuration/configuration.zig");
 
 const debug = @import("app/debug.zig");
 
-const FireState = @import("app/fire_state.zig").FireState;
+const GameState = @import("app/game_state.zig").GameState;
 const RenderContext = @import("app/render_context.zig").RenderContext;
 
 const MatrixPrinter = @import("io/matrix_printer.zig").LinearMatrixPrinter;
 
 const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
+
+pub const panic = PanicHandler(cleanup_terminal).panic;
+
+fn cleanup_terminal() void {
+    console.disable_raw_mode();
+
+    const stdout = std.fs.File.stdout();
+
+    stdout.writeAll(
+        console.SHOW_CURSOR ++
+            console.CLEAN_ALL ++
+            console.RESET_CURSOR,
+    ) catch {};
+}
 
 /// Initializes application resources, configures the terminal, and starts
 /// the rendering loop.
@@ -61,7 +77,7 @@ pub fn main() !void {
     state.start_timestamp.store(config.start_ms, .release);
     state.speed_ms.store(config.milliseconds, .release);
 
-    var fire_state = FireState{};
+    var game_state = GameState{};
 
     try console.enable_ansi();
     try console.enable_utf8();
@@ -71,7 +87,7 @@ pub fn main() !void {
 
     try run(
         &state,
-        &fire_state,
+        &game_state,
         &persistent,
         &scratch,
         &config,
@@ -83,7 +99,7 @@ pub fn main() !void {
 /// until termination is requested.
 pub fn run(
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     config: *const configuration.Configuration,
@@ -112,7 +128,7 @@ pub fn run(
     var input_thread = try std.Thread.spawn(
         .{},
         run_input_loop,
-        .{ state, fire_state },
+        .{ state, game_state },
     );
 
     defer input_thread.join();
@@ -125,7 +141,7 @@ pub fn run(
             persistent,
             scratch,
             state,
-            fire_state,
+            game_state,
             config,
             printer,
             &lcg,
@@ -138,7 +154,7 @@ inline fn run_render_cycle(
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
     config: *const configuration.Configuration,
     printer: *Printer,
     lcg: *MiniLCG,
@@ -159,7 +175,7 @@ inline fn run_render_cycle(
     try printer.print(console.CLEAN_CONSOLE);
 
     while (!runtime.should_exit(state) and !runtime.should_reload(state)) {
-        if (fire_state.consume_power()) {
+        if (game_state.consume_power()) {
             context.matrix.switch_fire();
         }
 
@@ -168,7 +184,7 @@ inline fn run_render_cycle(
         if (config.debug) {
             try debug.print_debug(
                 state,
-                fire_state,
+                game_state,
                 persistent,
                 scratch,
                 config,
@@ -181,8 +197,8 @@ inline fn run_render_cycle(
 
         if (!state.pause.load(.acquire)) {
             try context.matrix.next(
-                fire_state.wind.load(.acquire),
-                fire_state.oxygen.load(.acquire),
+                game_state.wind.load(.acquire),
+                game_state.oxygen.load(.acquire),
             );
         }
 
@@ -205,7 +221,7 @@ inline fn run_render_cycle(
 
 fn run_input_loop(
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
 ) !void {
     const stdin = std.fs.File.stdin();
 
@@ -222,19 +238,19 @@ fn run_input_loop(
                 state.toggle_pause();
             },
             's', 'S' => {
-                fire_state.request_power();
+                game_state.request_power();
             },
             'w', 'W' => {
-                fire_state.mod_oxygen(1);
+                game_state.mod_oxygen(1);
             },
             'x', 'X' => {
-                fire_state.mod_oxygen(-1);
+                game_state.mod_oxygen(-1);
             },
             'a', 'A' => {
-                fire_state.mod_wind(1);
+                game_state.mod_wind(1);
             },
             'd', 'D' => {
-                fire_state.mod_wind(-1);
+                game_state.mod_wind(-1);
             },
             '+' => {
                 state.mod_speed(10);
