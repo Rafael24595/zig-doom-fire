@@ -6,7 +6,7 @@ Customize the fire with adjustable intensity, wind, oxygen levels, color themes,
 
 ![Doom Fire](.img/fire.gif)
 
-> **Terminal compatibility:** The project has been tested with Windows Terminal `1.23.13503.0`. Rendering performance and color display may vary across terminal emulators. If RGB rendering is slow or causes display issues, try `ANSI` mode.
+> **Terminal compatibility:** The project has been tested with Windows Terminal `1.23.13503.0`. Rendering performance and color display may vary across terminal emulators. If RGB rendering is slow or causes display issues, try `ANSI` mode. Keyboard input and character rendering may vary across terminal emulators.
 
 ## Features
 
@@ -203,6 +203,8 @@ Input is processed on a separate thread, allowing the render loop to continue wh
 
 ## Shutdown and Signal Handling
 
-The application supports clean shutdown through keyboard controls and interrupt handling on supported platforms.
+The application installs a signal handler and requests shutdown when an interrupt is received. During normal shutdown, deferred cleanup routines attempt to restore raw input mode and disable ANSI input, restore cursor visibility, and clear terminal output.
 
-During normal shutdown, the application attempts to restore the terminal state and stop background input processing. Exact behavior may depend on the operating system, terminal emulator, and how the process terminates.
+A custom panic handler also attempts to restore terminal settings before delegating to Zig's default panic handler. Recovery is best-effort and may not prevent terminal state from being left partially modified, especially if a panic occurs on another thread while rendering is in progress.
+
+Exact behavior may depend on the operating system, terminal emulator, and how the process terminates.
