@@ -12,7 +12,7 @@ const Printer = terminal_kit.printer.Printer;
 
 const configuration = @import("../configuration/configuration.zig");
 
-const FireState = @import("./fire_state.zig").FireState;
+const GameState = @import("./game_state.zig").GameState;
 const RenderContext = @import("./render_context.zig").RenderContext;
 
 /// Prints diagnostic information about the application, runtime state,
@@ -21,7 +21,7 @@ const RenderContext = @import("./render_context.zig").RenderContext;
 /// Returns an error if memory allocation, time formatting, or printing fails.
 pub fn print_debug(
     state: *RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     config: *const configuration.Configuration,
@@ -79,8 +79,8 @@ pub fn print_debug(
         @tagName(config.theme_color),
         @tagName(config.theme_symbol),
         power_status,
-        fire_state.wind.load(.acquire),
-        fire_state.oxygen.load(.acquire),
+        game_state.wind.load(.acquire),
+        game_state.oxygen.load(.acquire),
     });
 }
 

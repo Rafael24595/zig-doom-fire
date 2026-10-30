@@ -19,7 +19,7 @@ const max_oxygen = 5;
 /// their respective ranges when modified through the provided methods.
 /// Power requests are represented as a boolean flag that can be
 /// requested and consumed atomically.
-pub const FireState = struct {
+pub const GameState = struct {
     /// Current wind intensity, initialized to zero.
     /// Values are intended to remain within the range [-5, 5].
     wind: std.atomic.Value(isize) = .init(wind_default),
@@ -68,7 +68,7 @@ pub const FireState = struct {
 };
 
 test "FireState initializes with default values" {
-    var state = FireState{};
+    var state = GameState{};
 
     try testing.expectEqual(0, state.wind.load(.acquire));
     try testing.expectEqual(0, state.oxygen.load(.acquire));
@@ -76,7 +76,7 @@ test "FireState initializes with default values" {
 }
 
 test "wind modifications stay within supported bounds" {
-    var state = FireState{};
+    var state = GameState{};
 
     state.mod_wind(3);
     try testing.expectEqual(3, state.wind.load(.acquire));
@@ -89,7 +89,7 @@ test "wind modifications stay within supported bounds" {
 }
 
 test "oxygen modifications stay within supported bounds" {
-    var state = FireState{};
+    var state = GameState{};
 
     state.mod_oxygen(3);
     try testing.expectEqual(3, state.oxygen.load(.acquire));
@@ -104,7 +104,7 @@ test "oxygen modifications stay within supported bounds" {
 }
 
 test "power requests can be consumed only once" {
-    var state = FireState{};
+    var state = GameState{};
 
     try testing.expect(!state.consume_power());
 
@@ -115,7 +115,7 @@ test "power requests can be consumed only once" {
 }
 
 test "repeated power requests remain pending" {
-    var state = FireState{};
+    var state = GameState{};
 
     state.request_power();
     state.request_power();

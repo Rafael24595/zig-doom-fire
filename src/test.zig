@@ -1,5 +1,5 @@
 test {
-    _ = @import("app/fire_state.zig");
+    _ = @import("app/game_state.zig");
     _ = @import("app/render_context.zig");
 
     _ = @import("configuration/configuration.zig");
