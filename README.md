@@ -190,13 +190,13 @@ The simulation accepts keyboard input while running.
 | Key | Action |
 |---|---|
 | `p`, `Space` | Toggle pause and resume. The current frame remains visible while paused. |
+| `+` | Increase the frame delay by `10` ms, up to `3000` ms. |
+| `-` | Decrease the frame delay by `10` ms, down to `0` ms. |
 | `s` | Toggle the fire effect on or off. |
 | `w` | Increase oxygen by `1`, up to `5`. |
 | `x` | Decrease oxygen by `1`, down to `-5`. |
 | `a` | Increase wind by `1`, up to `5`. |
 | `d` | Decrease wind by `1`, down to `-5`. |
-| `+` | Increase the frame delay by `10` ms, up to `3000` ms. |
-| `-` | Decrease the frame delay by `10` ms, down to `0` ms. |
 | `q`, `Ctrl+C` | Request a clean exit. |
 
 Input is processed on a separate thread, allowing the render loop to continue while waiting for key presses. Atomic flags coordinate input and rendering operations.

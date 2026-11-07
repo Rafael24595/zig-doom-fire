@@ -237,6 +237,12 @@ fn run_input_loop(
             'p', 'P', console.SPACE => {
                 state.toggle_pause();
             },
+            '+' => {
+                state.mod_speed(10);
+            },
+            '-' => {
+                state.mod_speed(-10);
+            },
             's', 'S' => {
                 game_state.request_power();
             },
@@ -251,12 +257,6 @@ fn run_input_loop(
             },
             'd', 'D' => {
                 game_state.mod_wind(-1);
-            },
-            '+' => {
-                state.mod_speed(10);
-            },
-            '-' => {
-                state.mod_speed(-10);
             },
             'q', 'Q', console.CTRL_C => {
                 state.request_exit();
