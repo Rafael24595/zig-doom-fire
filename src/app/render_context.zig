@@ -6,6 +6,7 @@ const Counter = terminal_kit.frame.Counter;
 
 const console = terminal_kit.console;
 const Printer = terminal_kit.printer.Printer;
+const RuntimeState = terminal_kit.runtime_state.RuntimeState;
 const SplitMix64 = terminal_kit.splitmix64.SplitMix64;
 
 const configuration = @import("../configuration/configuration.zig");
@@ -42,10 +43,11 @@ pub const RenderContext = struct {
         allocator: std.mem.Allocator,
         winsize: console.WinSize,
         config: *const configuration.Configuration,
+        state: *RuntimeState,
         printer: *Printer,
         rng: *SplitMix64,
     ) !void {
-        const space = calculate_padding(config);
+        const space = calculate_padding(state);
 
         const cols = winsize.cols;
         const rows = winsize.rows - space;
@@ -103,13 +105,13 @@ pub const RenderContext = struct {
     }
 };
 
-inline fn calculate_padding(config: *const configuration.Configuration) usize {
+inline fn calculate_padding(state: *RuntimeState) usize {
     var space: usize = 0;
-    if (config.debug) {
+    if (state.show_debug()) {
         space += 4;
     }
 
-    if (config.controls) {
+    if (state.show_controls()) {
         space += 1;
     }
 
@@ -126,39 +128,38 @@ inline fn calculate_intensity(config: *const configuration.Configuration, rows: 
 }
 
 test "calculate_padding returns zero when all options are disabled" {
-    const config = configuration.Configuration{
-        .debug = false,
-        .controls = false,
+    var state = RuntimeState{
+        .debug = .init(false),
+        .controls = .init(false),
     };
 
-    try std.testing.expectEqual(0, calculate_padding(&config));
+    try std.testing.expectEqual(0, calculate_padding(&state));
 }
 
 test "calculate_padding reserves space for debug output" {
-    const config = configuration.Configuration{
-        .debug = true,
-        .controls = false,
+    var state = RuntimeState{
+        .debug = .init(true),
+        .controls = .init(false),
     };
 
-    try std.testing.expectEqual(4, calculate_padding(&config));
+    try std.testing.expectEqual(4, calculate_padding(&state));
 }
 
 test "calculate_padding reserves space for controls" {
-    const config = configuration.Configuration{
-        .debug = false,
-        .controls = true,
+    var state = RuntimeState{
+        .debug = .init(false),
+        .controls = .init(true),
     };
-
-    try std.testing.expectEqual(1, calculate_padding(&config));
+    try std.testing.expectEqual(1, calculate_padding(&state));
 }
 
 test "calculate_padding reserves space for debug output and controls" {
-    const config = configuration.Configuration{
-        .debug = true,
-        .controls = true,
+    var state = RuntimeState{
+        .debug = .init(true),
+        .controls = .init(true),
     };
 
-    try std.testing.expectEqual(5, calculate_padding(&config));
+    try std.testing.expectEqual(5, calculate_padding(&state));
 }
 
 test "calculate_intensity returns the configured intensity when positive" {

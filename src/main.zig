@@ -75,6 +75,8 @@ pub fn main() !void {
     var state = runtime.RuntimeState.init(
         config.start_ms,
         config.milliseconds,
+        config.debug,
+        config.controls,
     );
 
     var game_state = GameState{};
@@ -167,6 +169,7 @@ inline fn run_render_cycle(
         allocator,
         winsize,
         config,
+        state,
         printer,
         rng,
     );
@@ -181,7 +184,7 @@ inline fn run_render_cycle(
 
         try printer.print(console.RESET_CURSOR);
 
-        if (config.debug) {
+        if (state.show_debug()) {
             try debug.print_debug(
                 state,
                 game_state,
@@ -202,7 +205,7 @@ inline fn run_render_cycle(
             );
         }
 
-        if (config.controls) {
+        if (state.show_controls()) {
             try debug.print_controls(printer);
         }
 
@@ -257,6 +260,14 @@ fn run_input_loop(
             },
             'd', 'D' => {
                 game_state.mod_wind(-1);
+            },
+            '/' => {
+                state.toggle_debug();
+                state.request_reload();
+            },
+            '?' => {
+                state.toggle_controls();
+                state.request_reload();
             },
             'q', 'Q', console.CTRL_C => {
                 state.request_exit();
