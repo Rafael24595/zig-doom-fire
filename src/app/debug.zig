@@ -36,17 +36,8 @@ pub fn print_debug(
     const rows = matrix.rows_len();
     const area = rows * cols;
 
-    var end_ms = std.time.milliTimestamp();
-    if (state.pause.load(.acquire)) {
-        end_ms = state.pause_timestamp.load(.acquire);
-    }
-
-    const start_timestamp = state.start_timestamp.load(.acquire);
-
-    const time = try kit_time.milliseconds_to_time(allocator, end_ms - start_timestamp, null);
+    const time = try kit_time.milliseconds_to_time(allocator, state.get_runtime(), null);
     defer allocator.free(time);
-
-    const paused = state.pause.load(.acquire);
 
     var power_status: []const u8 = "off";
     if (matrix.status) {
@@ -61,7 +52,7 @@ pub fn print_debug(
     try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} | FPS: {d}  \n", .{
         persistent.bytes(),
         scratch.bytes(),
-        paused,
+        state.is_paused(),
         context.counter.get_frame_rate(std.time.ms_per_s),
     });
 
@@ -74,13 +65,13 @@ pub fn print_debug(
     });
 
     try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{
-        state.speed_ms.load(.acquire),
+        state.get_speed(),
         time,
         @tagName(config.theme_color),
         @tagName(config.theme_symbol),
         power_status,
-        game_state.wind.load(.acquire),
-        game_state.oxygen.load(.acquire),
+        game_state.get_wind(),
+        game_state.get_oxygen(),
     });
 }
 
