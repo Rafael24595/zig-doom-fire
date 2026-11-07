@@ -10,19 +10,35 @@ const Printer = terminal_kit.printer.Printer;
 const runtime = terminal_kit.runtime_state;
 
 const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
-const MiniLCG = terminal_kit.mini_lcg.MiniLCG;
+const SplitMix64 = terminal_kit.splitmix64.SplitMix64;
+
+const PanicHandler = terminal_kit.panic_handler.PanicHandler;
 
 const configuration = @import("configuration/configuration.zig");
 
 const debug = @import("app/debug.zig");
 
-const FireState = @import("app/fire_state.zig").FireState;
+const GameState = @import("app/game_state.zig").GameState;
 const RenderContext = @import("app/render_context.zig").RenderContext;
 
 const MatrixPrinter = @import("io/matrix_printer.zig").LinearMatrixPrinter;
 
 const matrix = @import("domain/matrix.zig");
 const color = @import("domain/color.zig");
+
+pub const panic = PanicHandler(cleanup_terminal).panic;
+
+fn cleanup_terminal() void {
+    console.disable_raw_mode();
+
+    const stdout = std.fs.File.stdout();
+
+    stdout.writeAll(
+        console.SHOW_CURSOR ++
+            console.CLEAN_ALL ++
+            console.RESET_CURSOR,
+    ) catch {};
+}
 
 /// Initializes application resources, configures the terminal, and starts
 /// the rendering loop.
@@ -56,12 +72,14 @@ pub fn main() !void {
         &printer,
     );
 
-    var state = runtime.RuntimeState{};
+    var state = runtime.RuntimeState.init(
+        config.start_ms,
+        config.milliseconds,
+        config.debug,
+        config.controls,
+    );
 
-    state.start_timestamp.store(config.start_ms, .release);
-    state.speed_ms.store(config.milliseconds, .release);
-
-    var fire_state = FireState{};
+    var game_state = GameState{};
 
     try console.enable_ansi();
     try console.enable_utf8();
@@ -71,7 +89,7 @@ pub fn main() !void {
 
     try run(
         &state,
-        &fire_state,
+        &game_state,
         &persistent,
         &scratch,
         &config,
@@ -83,7 +101,7 @@ pub fn main() !void {
 /// until termination is requested.
 pub fn run(
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     config: *const configuration.Configuration,
@@ -99,7 +117,7 @@ pub fn run(
 
     const allocator = persistent.allocator();
 
-    var lcg = MiniLCG.init(config.seed);
+    var rng = SplitMix64.init(config.seed);
 
     defer printer.reset();
 
@@ -112,7 +130,7 @@ pub fn run(
     var input_thread = try std.Thread.spawn(
         .{},
         run_input_loop,
-        .{ state, fire_state },
+        .{ state, game_state },
     );
 
     defer input_thread.join();
@@ -125,10 +143,10 @@ pub fn run(
             persistent,
             scratch,
             state,
-            fire_state,
+            game_state,
             config,
             printer,
-            &lcg,
+            &rng,
         );
     }
 }
@@ -138,10 +156,10 @@ inline fn run_render_cycle(
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
     config: *const configuration.Configuration,
     printer: *Printer,
-    lcg: *MiniLCG,
+    rng: *SplitMix64,
 ) !void {
     const winsize = try console.winsize();
 
@@ -151,46 +169,63 @@ inline fn run_render_cycle(
         allocator,
         winsize,
         config,
+        state,
         printer,
-        lcg,
+        rng,
     );
     defer context.deinit();
 
     try printer.print(console.CLEAN_CONSOLE);
 
     while (!runtime.should_exit(state) and !runtime.should_reload(state)) {
-        if (fire_state.consume_power()) {
+        if (game_state.consume_power()) {
             context.matrix.switch_fire();
         }
 
         try printer.print(console.RESET_CURSOR);
 
-        if (config.debug) {
-            try debug.print_debug(
+        var max_cursor: usize = 0;
+        const target_cursor = state.get_help_cursor();
+
+        if (state.show_debug()) {
+            const result = try debug.print_debug(
                 state,
-                fire_state,
+                game_state,
                 persistent,
                 scratch,
                 config,
                 printer,
                 &context,
+                target_cursor,
             );
+
+            max_cursor = @max(max_cursor, result);
         }
 
         try context.matrix_printer.print(&context.matrix);
 
-        if (!state.pause.load(.acquire)) {
+        if (!state.is_paused()) {
             try context.matrix.next(
-                fire_state.wind.load(.acquire),
-                fire_state.oxygen.load(.acquire),
+                game_state.get_wind(),
+                game_state.get_oxygen(),
             );
         }
 
-        if (config.controls) {
-            try debug.print_controls(printer);
+        if (state.show_controls()) {
+            const result = try debug.print_controls(
+                printer,
+                &context,
+                target_cursor,
+            );
+
+            max_cursor = @max(max_cursor, result);
         }
 
-        const speed = state.speed_ms.load(.acquire);
+        state.set_help_cursor(
+            @min(target_cursor, max_cursor),
+        );
+
+        const speed = state.get_speed();
         try state.wait_for_frame(speed * std.time.ns_per_ms);
 
         printer.reset();
@@ -205,7 +240,7 @@ inline fn run_render_cycle(
 
 fn run_input_loop(
     state: *runtime.RuntimeState,
-    fire_state: *FireState,
+    game_state: *GameState,
 ) !void {
     const stdin = std.fs.File.stdin();
 
@@ -221,26 +256,40 @@ fn run_input_loop(
             'p', 'P', console.SPACE => {
                 state.toggle_pause();
             },
-            's', 'S' => {
-                fire_state.request_power();
-            },
-            'w', 'W' => {
-                fire_state.mod_oxygen(1);
-            },
-            'x', 'X' => {
-                fire_state.mod_oxygen(-1);
-            },
-            'a', 'A' => {
-                fire_state.mod_wind(1);
-            },
-            'd', 'D' => {
-                fire_state.mod_wind(-1);
-            },
             '+' => {
                 state.mod_speed(10);
             },
             '-' => {
                 state.mod_speed(-10);
+            },
+            's', 'S' => {
+                game_state.request_power();
+            },
+            'w', 'W' => {
+                game_state.mod_oxygen(1);
+            },
+            'x', 'X' => {
+                game_state.mod_oxygen(-1);
+            },
+            'a', 'A' => {
+                game_state.mod_wind(1);
+            },
+            'd', 'D' => {
+                game_state.mod_wind(-1);
+            },
+            ',' => {
+                state.dec_help_cursor();
+            },
+            '.' => {
+                state.inc_help_cursor();
+            },
+            '/' => {
+                state.toggle_debug();
+                state.request_reload();
+            },
+            '?' => {
+                state.toggle_controls();
+                state.request_reload();
             },
             'q', 'Q', console.CTRL_C => {
                 state.request_exit();

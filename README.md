@@ -6,7 +6,7 @@ Customize the fire with adjustable intensity, wind, oxygen levels, color themes,
 
 ![Doom Fire](.img/fire.gif)
 
-> **Terminal compatibility:** The project has been tested with Windows Terminal `1.23.13503.0`. Rendering performance and color display may vary across terminal emulators. If RGB rendering is slow or causes display issues, try `ANSI` mode.
+> **Terminal compatibility:** The project has been tested with Windows Terminal `1.23.13503.0`. Rendering performance and color display may vary across terminal emulators. If RGB rendering is slow or causes display issues, try `ANSI` mode. Keyboard input and character rendering may vary across terminal emulators.
 
 ## Features
 
@@ -190,19 +190,25 @@ The simulation accepts keyboard input while running.
 | Key | Action |
 |---|---|
 | `p`, `Space` | Toggle pause and resume. The current frame remains visible while paused. |
+| `+` | Increase the frame delay by `10` ms, up to `3000` ms. |
+| `-` | Decrease the frame delay by `10` ms, down to `0` ms. |
 | `s` | Toggle the fire effect on or off. |
 | `w` | Increase oxygen by `1`, up to `5`. |
 | `x` | Decrease oxygen by `1`, down to `-5`. |
 | `a` | Increase wind by `1`, up to `5`. |
 | `d` | Decrease wind by `1`, down to `-5`. |
-| `+` | Increase the frame delay by `10` ms, up to `3000` ms. |
-| `-` | Decrease the frame delay by `10` ms, down to `0` ms. |
+| `,` | Scroll the help output horizontally to the left. |
+| `.` | Scroll the help output horizontally to the right. |
+| `/` | Toggle debug output on and off. |
+| `?` | Toggle controls output on and off. |
 | `q`, `Ctrl+C` | Request a clean exit. |
 
 Input is processed on a separate thread, allowing the render loop to continue while waiting for key presses. Atomic flags coordinate input and rendering operations.
 
 ## Shutdown and Signal Handling
 
-The application supports clean shutdown through keyboard controls and interrupt handling on supported platforms.
+The application installs a signal handler and requests shutdown when an interrupt is received. During normal shutdown, deferred cleanup routines attempt to restore raw input mode and disable ANSI input, restore cursor visibility, and clear terminal output.
 
-During normal shutdown, the application attempts to restore the terminal state and stop background input processing. Exact behavior may depend on the operating system, terminal emulator, and how the process terminates.
+A custom panic handler also attempts to restore terminal settings before delegating to Zig's default panic handler. Recovery is best-effort and may not prevent terminal state from being left partially modified, especially if a panic occurs on another thread while rendering is in progress.
+
+Exact behavior may depend on the operating system, terminal emulator, and how the process terminates.
