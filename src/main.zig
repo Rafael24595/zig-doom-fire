@@ -184,8 +184,11 @@ inline fn run_render_cycle(
 
         try printer.print(console.RESET_CURSOR);
 
+        var max_cursor: usize = 0;
+        const target_cursor = state.get_help_cursor();
+
         if (state.show_debug()) {
-            try debug.print_debug(
+            const result = try debug.print_debug(
                 state,
                 game_state,
                 persistent,
@@ -193,7 +196,10 @@ inline fn run_render_cycle(
                 config,
                 printer,
                 &context,
+                target_cursor,
             );
+
+            max_cursor = @max(max_cursor, result);
         }
 
         try context.matrix_printer.print(&context.matrix);
@@ -206,8 +212,18 @@ inline fn run_render_cycle(
         }
 
         if (state.show_controls()) {
-            try debug.print_controls(printer);
+            const result = try debug.print_controls(
+                printer,
+                &context,
+                target_cursor,
+            );
+
+            max_cursor = @max(max_cursor, result);
         }
+
+        state.set_help_cursor(
+            @min(target_cursor, max_cursor),
+        );
 
         const speed = state.get_speed();
         try state.wait_for_frame(speed * std.time.ns_per_ms);
@@ -260,6 +276,12 @@ fn run_input_loop(
             },
             'd', 'D' => {
                 game_state.mod_wind(-1);
+            },
+            ',' => {
+                state.dec_help_cursor();
+            },
+            '.' => {
+                state.inc_help_cursor();
             },
             '/' => {
                 state.toggle_debug();

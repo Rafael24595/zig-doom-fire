@@ -197,6 +197,8 @@ The simulation accepts keyboard input while running.
 | `x` | Decrease oxygen by `1`, down to `-5`. |
 | `a` | Increase wind by `1`, up to `5`. |
 | `d` | Decrease wind by `1`, down to `-5`. |
+| `,` | Scroll the help output horizontally to the left. |
+| `.` | Scroll the help output horizontally to the right. |
 | `/` | Toggle debug output on and off. |
 | `?` | Toggle controls output on and off. |
 | `q`, `Ctrl+C` | Request a clean exit. |
