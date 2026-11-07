@@ -6,6 +6,8 @@ const terminal_kit = @import("terminal_kit");
 
 const kit_time = terminal_kit.time;
 
+const console = terminal_kit.console;
+
 const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
 const RuntimeState = terminal_kit.runtime_state.RuntimeState;
 const Printer = terminal_kit.printer.Printer;
@@ -44,50 +46,127 @@ pub fn print_debug(
         power_status = "on";
     }
 
-    try printer.printf("{}: {s}\n", .{
-        build.name,
-        build.version,
-    });
+    const header = try printer.format(
+        "{}: {s}",
+        .{
+            build.name,
+            build.version,
+        },
+    );
 
-    try printer.printf("Persistent memory: {d} bytes | Scratch memory: {d} bytes | Paused {any} | FPS: {d}  \n", .{
-        persistent.bytes(),
-        scratch.bytes(),
-        state.is_paused(),
-        context.counter.get_frame_rate(std.time.ms_per_s),
-    });
+    const memory = try printer.format(
+        "Persistent memory: {d} bytes | " ++
+            "Scratch memory: {d} bytes | " ++
+            "Paused {any} | " ++
+            "FPS: {d}",
+        .{
+            persistent.bytes(),
+            scratch.bytes(),
+            state.is_paused(),
+            context.counter.get_frame_rate(std.time.ms_per_s),
+        },
+    );
 
-    try printer.printf("Seed: {d} | Matrix: {d} | Columns: {d} | Rows: {d} | Intensity: {d} \n", .{
-        config.seed,
-        area,
-        cols,
-        rows,
-        matrix.intensity_len(),
-    });
+    const runtime_1 = try printer.format(
+        "Seed: {d} | " ++
+            "Matrix: {d} | " ++
+            "Columns: {d} | " ++
+            "Rows: {d} | " ++
+            "Intensity: {d}",
+        .{
+            config.seed,
+            area,
+            cols,
+            rows,
+            matrix.intensity_len(),
+        },
+    );
 
-    try printer.printf("Speed: {d}ms | Time: {s} | Color: {s} | Symbol: {s} | Power: {s} | Wind: {d} | Oxygen: {d}  \n", .{
-        state.get_speed(),
-        time,
-        @tagName(config.theme_color),
-        @tagName(config.theme_symbol),
-        power_status,
-        game_state.get_wind(),
-        game_state.get_oxygen(),
-    });
+    const runtime_2 = try printer.format(
+        "Speed: {d}ms | " ++
+            "Time: {s} | " ++
+            "Color: {s} | " ++
+            "Symbol: {s} | " ++
+            "Power: {s} | " ++
+            "Wind: {d} | " ++
+            "Oxygen: {d}",
+        .{
+            state.get_speed(),
+            time,
+            @tagName(config.theme_color),
+            @tagName(config.theme_symbol),
+            power_status,
+            game_state.get_wind(),
+            game_state.get_oxygen(),
+        },
+    );
+
+    try printer.printf(
+        "{s}{s}\n" ++
+            "{s}{s}\n" ++
+            "{s}{s}\n" ++
+            "{s}{s}\n",
+        .{
+            console.CLEAN_LINE,
+            header,
+            console.CLEAN_LINE,
+            memory,
+            console.CLEAN_LINE,
+            runtime_1,
+            console.CLEAN_LINE,
+            runtime_2,
+        },
+    );
 }
 
 /// Prints the keyboard shortcuts available to control the application.
 ///
 /// Returns an error if printing the controls fails.
 pub fn print_controls(printer: *Printer) !void {
-    try printer.printf("\nPause: [{s}] | On/Off: [{s}] | Inc oxygen: {s} | Dec oxygen: {s} | Inc wind: [{s}] | Dec wind: [{s}] | Inc sleep: [{s}] | Dec sleep: [{s}] | Exit: [{s}]", .{
-        "p, space",
-        "s",
-        "w",
-        "x",
-        "a",
-        "d",
-        "+",
-        "-",
-        "q, ctrl+c",
-    });
+    const app_controls = try printer.format(
+        "Pause: [{s}] | " ++
+            "Inc sleep: [{s}] | " ++
+            "Dec sleep: [{s}] | " ++
+            "On/Off: [{s}] | " ++
+            "Inc oxygen: {s} | " ++
+            "Dec oxygen: {s} | " ++
+            "Inc wind: [{s}] | " ++
+            "Dec wind: [{s}] | ",
+        .{
+            "p, space",
+            "+",
+            "-",
+            "s",
+            "w",
+            "x",
+            "a",
+            "d",
+        },
+    );
+
+    const trm_controls = try printer.format(
+        "Scroll left: [{s}] | " ++
+            "Scroll right: [{s}] | " ++
+            "Show debug: [{s}] | " ++
+            "Show controls: [{s}] | " ++
+            "Exit: [{s}]",
+        .{
+            ",",
+            ".",
+            "/",
+            "?",
+            "q, ctrl+c",
+        },
+    );
+
+    try printer.printf(
+        "\n{s}{s}" ++
+            "\n{s}{s}",
+        .{
+            console.CLEAN_LINE,
+            app_controls,
+            console.CLEAN_LINE,
+            trm_controls,
+        },
+    );
 }

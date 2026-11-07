@@ -112,7 +112,7 @@ inline fn calculate_padding(state: *RuntimeState) usize {
     }
 
     if (state.show_controls()) {
-        space += 1;
+        space += 2;
     }
 
     return space;
@@ -150,7 +150,7 @@ test "calculate_padding reserves space for controls" {
         .debug = .init(false),
         .controls = .init(true),
     };
-    try std.testing.expectEqual(1, calculate_padding(&state));
+    try std.testing.expectEqual(2, calculate_padding(&state));
 }
 
 test "calculate_padding reserves space for debug output and controls" {
@@ -159,7 +159,7 @@ test "calculate_padding reserves space for debug output and controls" {
         .controls = .init(true),
     };
 
-    try std.testing.expectEqual(5, calculate_padding(&state));
+    try std.testing.expectEqual(6, calculate_padding(&state));
 }
 
 test "calculate_intensity returns the configured intensity when positive" {
