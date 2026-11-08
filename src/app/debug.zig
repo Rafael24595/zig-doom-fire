@@ -31,9 +31,9 @@ pub fn print_debug(
     context: *RenderContext,
     target_cursor: usize,
 ) !usize {
-    var allocator = scratch.allocator();
+    const allocator = scratch.allocator();
 
-    var matrix = context.matrix;
+    const matrix = context.matrix;
 
     const cols = matrix.cols_len();
     const rows = matrix.rows_len();
@@ -42,12 +42,12 @@ pub fn print_debug(
     const time = try kit_time.milliseconds_to_time(allocator, state.get_runtime(), null);
     defer allocator.free(time);
 
-    var max_cursor: usize = 0;
+    const power_status = if (matrix.status)
+        "on"
+    else
+        "off";
 
-    var power_status: []const u8 = "off";
-    if (matrix.status) {
-        power_status = "on";
-    }
+    var max_cursor: usize = 0;
 
     const header = try printer.format_limited(
         target_cursor,
