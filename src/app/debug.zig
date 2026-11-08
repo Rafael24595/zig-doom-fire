@@ -84,15 +84,15 @@ pub fn print_debug(
         target_cursor,
         width,
         "Seed: {d} | " ++
-            "Matrix: {d} | " ++
-            "Columns: {d} | " ++
-            "Rows: {d} | " ++
+            "Formatter: {s} | " ++
+            "Symbol: {s} | " ++
+            "Color: {s} | " ++
             "Intensity: {d}",
         .{
             config.seed,
-            area,
-            cols,
-            rows,
+            @tagName(config.color_mode),
+            @tagName(config.theme_symbol),
+            @tagName(config.theme_color),
             matrix.intensity_len(),
         },
     );
@@ -103,20 +103,22 @@ pub fn print_debug(
         target_cursor,
         width,
         "Speed: {d}ms | " ++
-            "Time: {s} | " ++
-            "Color: {s} | " ++
-            "Symbol: {s} | " ++
+            "Matrix: {d} | " ++
+            "Cols: {d} | " ++
+            "Rows: {d} | " ++
             "Power: {s} | " ++
             "Wind: {d} | " ++
-            "Oxygen: {d}",
+            "Oxygen: {d} | " ++
+            "Time: {s}",
         .{
             state.get_speed(),
-            time,
-            @tagName(config.theme_color),
-            @tagName(config.theme_symbol),
+            area,
+            cols,
+            rows,
             power_status,
             game_state.get_wind(),
             game_state.get_oxygen(),
+            time,
         },
     );
 
