@@ -27,13 +27,15 @@ pub fn print_debug(
     persistent: *AllocatorTracer,
     scratch: *AllocatorTracer,
     config: *const configuration.Configuration,
+    winsize: console.WinSize,
     printer: *Printer,
     context: *RenderContext,
     target_cursor: usize,
 ) !usize {
-    var allocator = scratch.allocator();
+    const allocator = scratch.allocator();
 
-    var matrix = context.matrix;
+    const width = winsize.cols;
+    const matrix = context.matrix;
 
     const cols = matrix.cols_len();
     const rows = matrix.rows_len();
@@ -42,16 +44,16 @@ pub fn print_debug(
     const time = try kit_time.milliseconds_to_time(allocator, state.get_runtime(), null);
     defer allocator.free(time);
 
-    var max_cursor: usize = 0;
+    const power_status = if (matrix.status)
+        "on"
+    else
+        "off";
 
-    var power_status: []const u8 = "off";
-    if (matrix.status) {
-        power_status = "on";
-    }
+    var max_cursor: usize = 0;
 
     const header = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "{}: {s}",
         .{
             build.name,
@@ -63,7 +65,7 @@ pub fn print_debug(
 
     const memory = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "Persistent memory: {d} bytes | " ++
             "Scratch memory: {d} bytes | " ++
             "Paused {any} | " ++
@@ -80,17 +82,17 @@ pub fn print_debug(
 
     const runtime_1 = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "Seed: {d} | " ++
-            "Matrix: {d} | " ++
-            "Columns: {d} | " ++
-            "Rows: {d} | " ++
+            "Formatter: {s} | " ++
+            "Symbol: {s} | " ++
+            "Color: {s} | " ++
             "Intensity: {d}",
         .{
             config.seed,
-            area,
-            cols,
-            rows,
+            @tagName(config.color_mode),
+            @tagName(config.theme_symbol),
+            @tagName(config.theme_color),
             matrix.intensity_len(),
         },
     );
@@ -99,22 +101,24 @@ pub fn print_debug(
 
     const runtime_2 = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "Speed: {d}ms | " ++
-            "Time: {s} | " ++
-            "Color: {s} | " ++
-            "Symbol: {s} | " ++
+            "Matrix: {d} | " ++
+            "Cols: {d} | " ++
+            "Rows: {d} | " ++
             "Power: {s} | " ++
             "Wind: {d} | " ++
-            "Oxygen: {d}",
+            "Oxygen: {d} | " ++
+            "Time: {s}",
         .{
             state.get_speed(),
-            time,
-            @tagName(config.theme_color),
-            @tagName(config.theme_symbol),
+            area,
+            cols,
+            rows,
             power_status,
             game_state.get_wind(),
             game_state.get_oxygen(),
+            time,
         },
     );
 
@@ -145,17 +149,16 @@ pub fn print_debug(
 /// Returns an error if printing the controls fails.
 pub fn print_controls(
     printer: *Printer,
-    context: *RenderContext,
+    winsize: console.WinSize,
     target_cursor: usize,
 ) !usize {
-    const matrix = context.matrix;
-    const cols = matrix.cols_len();
+    const width = winsize.cols;
 
     var max_cursor: usize = 0;
 
     const app_controls = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "Pause: [{s}] | " ++
             "Inc sleep: [{s}] | " ++
             "Dec sleep: [{s}] | " ++
@@ -180,7 +183,7 @@ pub fn print_controls(
 
     const trm_controls = try printer.format_limited(
         target_cursor,
-        cols,
+        width,
         "Scroll left: [{s}] | " ++
             "Scroll right: [{s}] | " ++
             "Show debug: [{s}] | " ++

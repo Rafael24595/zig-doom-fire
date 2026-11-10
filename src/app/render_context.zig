@@ -85,7 +85,7 @@ pub const RenderContext = struct {
 
         errdefer self.matrix_printer.free();
 
-        self.counter = Counter.init();
+        self.counter = Counter.init(config.clock);
     }
 
     /// Releases the resources owned by the rendering context.
@@ -129,6 +129,7 @@ inline fn calculate_intensity(config: *const configuration.Configuration, rows: 
 
 test "calculate_padding returns zero when all options are disabled" {
     var state = RuntimeState{
+        .clock = undefined,
         .debug = .init(false),
         .controls = .init(false),
     };
@@ -138,6 +139,7 @@ test "calculate_padding returns zero when all options are disabled" {
 
 test "calculate_padding reserves space for debug output" {
     var state = RuntimeState{
+        .clock = undefined,
         .debug = .init(true),
         .controls = .init(false),
     };
@@ -147,6 +149,7 @@ test "calculate_padding reserves space for debug output" {
 
 test "calculate_padding reserves space for controls" {
     var state = RuntimeState{
+        .clock = undefined,
         .debug = .init(false),
         .controls = .init(true),
     };
@@ -155,6 +158,7 @@ test "calculate_padding reserves space for controls" {
 
 test "calculate_padding reserves space for debug output and controls" {
     var state = RuntimeState{
+        .clock = undefined,
         .debug = .init(true),
         .controls = .init(true),
     };
@@ -164,6 +168,7 @@ test "calculate_padding reserves space for debug output and controls" {
 
 test "calculate_intensity returns the configured intensity when positive" {
     const config = configuration.Configuration{
+        .clock = undefined,
         .intensity = 12,
         .intensity_per = 0.5,
     };
@@ -173,6 +178,7 @@ test "calculate_intensity returns the configured intensity when positive" {
 
 test "calculate_intensity derives intensity from row count" {
     const config = configuration.Configuration{
+        .clock = undefined,
         .intensity = 0,
         .intensity_per = 0.5,
     };
@@ -182,6 +188,7 @@ test "calculate_intensity derives intensity from row count" {
 
 test "calculate_intensity returns zero for zero rows" {
     const config = configuration.Configuration{
+        .clock = undefined,
         .intensity = 0,
         .intensity_per = 0.5,
     };
@@ -191,6 +198,7 @@ test "calculate_intensity returns zero for zero rows" {
 
 test "calculate_intensity truncates fractional results" {
     const config = configuration.Configuration{
+        .clock = undefined,
         .intensity = 0,
         .intensity_per = 0.35,
     };

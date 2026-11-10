@@ -5,10 +5,10 @@ const terminal_kit = @import("terminal_kit");
 
 const signals = terminal_kit.signals;
 const console = terminal_kit.console;
-const Printer = terminal_kit.printer.Printer;
-
+const kit_clock = terminal_kit.clock;
 const runtime = terminal_kit.runtime_state;
 
+const Printer = terminal_kit.printer.Printer;
 const AllocatorTracer = terminal_kit.allocator.AllocatorTracer;
 const SplitMix64 = terminal_kit.splitmix64.SplitMix64;
 
@@ -60,6 +60,9 @@ pub fn main() !void {
 
     defer arena.deinit();
 
+    var monotonic = try kit_clock.MonotonicClock.init();
+    const clock = monotonic.clock();
+
     var printer = Printer{
         .arena = &arena,
         .out = std.fs.File.stdout(),
@@ -69,10 +72,12 @@ pub fn main() !void {
 
     const config = try configuration.from_args(
         persistent.allocator(),
+        clock,
         &printer,
     );
 
     var state = runtime.RuntimeState.init(
+        clock,
         config.start_ms,
         config.milliseconds,
         config.debug,
@@ -194,6 +199,7 @@ inline fn run_render_cycle(
                 persistent,
                 scratch,
                 config,
+                winsize,
                 printer,
                 &context,
                 target_cursor,
@@ -214,7 +220,7 @@ inline fn run_render_cycle(
         if (state.show_controls()) {
             const result = try debug.print_controls(
                 printer,
-                &context,
+                winsize,
                 target_cursor,
             );
 
