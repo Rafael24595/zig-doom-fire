@@ -56,18 +56,30 @@ zig-out/bin/zig-doom-fire --help
 
 ## Command-Line Options
 
+### System
+
 | Option | Description | Default |
 |---|---|---|
 | `-h`, `--help` | Display the help message | — |
 | `-v`, `--version` | Display the project version | — |
+
+### Runtime
+
+| Option | Description | Default |
+|---|---|---|
 | `-d` | Enable debug output | Disabled |
-| `-hc` | Display the interactive controls map | Disabled |
+| `-k` | Display the controls map | Disabled |
 | `-s` | Set the random seed | Current timestamp in milliseconds |
 | `-ms` | Set the frame delay in milliseconds | `45` ms on Windows; `50` ms on other platforms |
 | `-i` | Set the fire intensity | `0.60 × matrix height` |
-| `-tc` | Set the color theme | `warm` |
-| `-ts` | Set the symbol theme | `classic` |
-| `-cm` | Set the color mode | `rgb` |
+
+### Appearance
+
+| Option | Description | Default |
+|---|---|---|
+| `-tc` | Set the fire color theme | `warm` |
+| `-ts` | Set the fire symbol theme | `classic` |
+| `-cm` | Set the color output mode | `rgb` |
 
 ### Available Values
 
@@ -166,7 +178,7 @@ zig-out/bin/zig-doom-fire -tc Neon -ts Spark -cm ANSI -ms 75
 
 A black terminal background is recommended for the intended fire effect and good contrast across color themes.
 
-RGB rendering may perform differently depending on the terminal emulator. If performance or color display is an issue, try ANSI mode.
+RGB rendering may perform differently depending on the terminal emulator. If performance or color display is an issue, try `ansi` mode.
 
 Unicode symbol themes may also depend on the terminal's font and character support.
 
@@ -176,7 +188,8 @@ Enable debug output with `-d` to inspect runtime information, including:
 
 - Project name and version.
 - Persistent and scratch memory usage.
-- Frame delay, fire intensity, wind, and oxygen levels.
+- Frame delay and fire intensity.
+- Wind and oxygen levels.
 - Random seed and matrix dimensions.
 - Color and symbol themes.
 - Elapsed execution time, excluding breaks.

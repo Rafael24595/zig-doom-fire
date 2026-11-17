@@ -47,7 +47,7 @@ const FLAG_DEBUG: Flag = Flag{
 };
 
 const FLAG_HELP_CONTROLS: Flag = Flag{
-    .flag_short = "-hc",
+    .flag_short = "-k",
     .desc = "Show the controls map",
     .name = "controls map",
 };
@@ -78,7 +78,7 @@ const FLAG_THEME_COLOR: Flag = Flag{
     .type = "<enum>",
     .desc = "Theme color",
     .name = "theme color",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 const FLAG_THEME_SYMBOL: Flag = Flag{
@@ -86,7 +86,7 @@ const FLAG_THEME_SYMBOL: Flag = Flag{
     .type = "<enum>",
     .desc = "Theme symbol",
     .name = "Theme symbol",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 const FLAG_COLOR_MODE: Flag = Flag{
@@ -94,7 +94,7 @@ const FLAG_COLOR_MODE: Flag = Flag{
     .type = "<enum>",
     .desc = "Color mode",
     .name = "color mode",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 /// Stores the application settings parsed from command-line arguments,
@@ -250,7 +250,9 @@ pub const Configuration = struct {
             .{config.intensity_per},
         );
 
-        try buffer.appendSlice(allocator, "\nUsage: zig-doom-fire          [options] \n\n");
+        try buffer.appendSlice(allocator, "\nUsage: zig-doom-fire          [options] \n");
+
+        try buffer.appendSlice(allocator, "\n System: \n");
 
         try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
@@ -263,6 +265,8 @@ pub const Configuration = struct {
             FLAG_VERSION,
             .none,
         ));
+
+        try buffer.appendSlice(allocator, "\n Runtime: \n");
 
         try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
@@ -293,6 +297,8 @@ pub const Configuration = struct {
             FLAG_INTENSITY,
             .{ .str = intensity_default },
         ));
+
+        try buffer.appendSlice(allocator, "\n Appearance: \n");
 
         try buffer.appendSlice(allocator, try kit_conf.format_flag(
             printer,
@@ -342,14 +348,14 @@ test "Configuration uses the expected default values" {
     try std.testing.expect(!config.debug);
     try std.testing.expect(!config.controls);
 
-    try std.testing.expectEqual(@as(u64, 0), config.seed);
-    try std.testing.expectEqual(@as(i64, 0), config.start_ms);
+    try std.testing.expectEqual(0, config.seed);
+    try std.testing.expectEqual(0, config.start_ms);
 
     try std.testing.expectEqual(frame_pause_ms, config.milliseconds);
-    try std.testing.expectEqual(@as(f32, 0.60), config.intensity_per);
-    try std.testing.expectEqual(@as(usize, 0), config.intensity);
+    try std.testing.expectEqual(0.60, config.intensity_per);
+    try std.testing.expectEqual(0, config.intensity);
 
-    try std.testing.expectEqual(symbol.Theme.classic, config.theme_symbol);
-    try std.testing.expectEqual(color.Theme.warm, config.theme_color);
-    try std.testing.expectEqual(formatter.FormatterCode.rgb, config.color_mode);
+    try std.testing.expectEqual(.classic, config.theme_symbol);
+    try std.testing.expectEqual(.warm, config.theme_color);
+    try std.testing.expectEqual(.rgb, config.color_mode);
 }
