@@ -348,14 +348,14 @@ test "Configuration uses the expected default values" {
     try std.testing.expect(!config.debug);
     try std.testing.expect(!config.controls);
 
-    try std.testing.expectEqual(@as(u64, 0), config.seed);
-    try std.testing.expectEqual(@as(i64, 0), config.start_ms);
+    try std.testing.expectEqual(0, config.seed);
+    try std.testing.expectEqual(0, config.start_ms);
 
     try std.testing.expectEqual(frame_pause_ms, config.milliseconds);
-    try std.testing.expectEqual(@as(f32, 0.60), config.intensity_per);
-    try std.testing.expectEqual(@as(usize, 0), config.intensity);
+    try std.testing.expectEqual(0.60, config.intensity_per);
+    try std.testing.expectEqual(0, config.intensity);
 
-    try std.testing.expectEqual(symbol.Theme.classic, config.theme_symbol);
-    try std.testing.expectEqual(color.Theme.warm, config.theme_color);
-    try std.testing.expectEqual(formatter.FormatterCode.rgb, config.color_mode);
+    try std.testing.expectEqual(.classic, config.theme_symbol);
+    try std.testing.expectEqual(.warm, config.theme_color);
+    try std.testing.expectEqual(.rgb, config.color_mode);
 }
