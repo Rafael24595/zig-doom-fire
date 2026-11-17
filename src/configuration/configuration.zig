@@ -78,7 +78,7 @@ const FLAG_THEME_COLOR: Flag = Flag{
     .type = "<enum>",
     .desc = "Theme color",
     .name = "theme color",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 const FLAG_THEME_SYMBOL: Flag = Flag{
@@ -86,7 +86,7 @@ const FLAG_THEME_SYMBOL: Flag = Flag{
     .type = "<enum>",
     .desc = "Theme symbol",
     .name = "Theme symbol",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 const FLAG_COLOR_MODE: Flag = Flag{
@@ -94,7 +94,7 @@ const FLAG_COLOR_MODE: Flag = Flag{
     .type = "<enum>",
     .desc = "Color mode",
     .name = "color mode",
-    .aux_desc = "(use \"help\" to list available modes)",
+    .aux_desc = kit_conf.HelperExpandValues,
 };
 
 /// Stores the application settings parsed from command-line arguments,
